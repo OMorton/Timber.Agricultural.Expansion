@@ -102,13 +102,14 @@ for (i in 1:length(continent.ls)) {
   
 }
 
-write.csv(cont.lyr.dat, "Data/ContinentArea/ContinentSuitability.csv")
+#write.csv(cont.lyr.dat, "Data/ContinentArea/ContinentSuitability.csv")
+cont.lyr.dat <- read.csv("Data/ContinentArea/ContinentSuitability.csv")
 
 
 ## make ordered
 c.lyr.dat <- c.lyr.dat %>%
-  mutate(time = ordered(time, levels = c("Current", "2010-2039", "2040-2069","2070-2099")),
-         grp = paste(country, suitability, sep = "."))
+  mutate(time = ordered(time, levels = c("Current", "2010-2039", "2040-2069","2070-2099"))) %>%
+  filter(land.cover == "Forestry")
 
 #### Plot country suitability area ####
 c.rcp26 <- c.lyr.dat %>% filter(RCP %in% c("rcp2.6",NA))
@@ -186,232 +187,294 @@ for (i in 1:10) {
 
 
 ## Alternate country level plot
-c.rcp26.simple <- c.rcp26 %>%
-  filter(suitability != c("Unsuitable")) %>%
-  group_by(RCP, time, country) %>%
-  mutate(cult.area.ha = sum(area.ha)) %>%
-  filter(suitability != c("Marginal")) %>%
-  mutate(mod.high.area.ha = sum(area.ha),
-         hist.mod.high.area.ha = ifelse(time == "Current", mod.high.area.ha, NA),
-         hist.cult.area.ha = ifelse(time == "Current", cult.area.ha, NA)) %>%
+ch.rcp26 <- c.rcp26 %>% select(-X) %>% pivot_wider(names_from = "suitability", values_from = "area.ha") %>%
+  mutate(cult.area.ha = Marginal + Moderately + Highly,
+         modhigh.area.ha = Moderately + Highly) %>%
+  select(-c(Unsuitable, Marginal, Moderately, Highly)) %>%
+  mutate(hist.cult.area.ha = ifelse(time == "Current", cult.area.ha, NA),
+         hist.modhigh.area.ha = ifelse(time == "Current", modhigh.area.ha, NA)) %>%
   group_by(country) %>%
-  fill(hist.mod.high.area.ha, .direction = "updown") %>%
+  fill(hist.modhigh.area.ha, .direction = "updown") %>%
   fill(hist.cult.area.ha, .direction = "updown") %>%
-  filter(suitability %in% c("Highly", "Moderately")) %>%
-  group_by(total.ha, RCP, time, land.cover, country, hist.cult.area.ha, hist.mod.high.area.ha) %>%
-  summarise(area.ha = sum(area.ha)) %>% mutate(RCP = "rcp2.6") %>%
-  pivot_wider(names_from = time, values_from = area.ha) %>%
-  mutate(ch.2099 = `2070-2099` - Current, ch.2069 = `2040-2069` - Current, ch.2039 = `2010-2039` - Current) %>%
-  select(-c(`2070-2099`, Current, `2040-2069`, `2010-2039`)) %>%
-  pivot_longer(!c(total.ha, hist.cult.area.ha, hist.mod.high.area.ha, RCP, land.cover, country), 
-               names_to = "change", values_to = "area.change.ha") %>%
-  group_by(country) %>% mutate(country.area = sum(unique(total.ha)),
-                               perc.mod.high = area.change.ha/hist.mod.high.area.ha *100,
-                               perc.cult = area.change.ha/hist.cult.area.ha *100)
+  filter(!(is.na(RCP))) %>%
+  mutate(ch.cult.area.ha = cult.area.ha - hist.cult.area.ha,
+         ch.modhigh.area.ha = modhigh.area.ha - hist.modhigh.area.ha,
+         ch.cult.area.perc = ch.cult.area.ha/hist.cult.area.ha *100,
+         ch.modhigh.area.perc = ch.modhigh.area.ha/hist.modhigh.area.ha *100) %>%
+  filter(country %in% c("United States of America", "Russia", "China", "Brazil", "Canada",
+         "Indonesia"))
 
-c.rcp85.simple <- c.rcp85 %>%
-  filter(suitability != c("Unsuitable")) %>%
-  group_by(RCP, time, country) %>%
-  mutate(cult.area.ha = sum(area.ha)) %>%
-  filter(suitability != c("Marginal")) %>%
-  mutate(mod.high.area.ha = sum(area.ha),
-         hist.mod.high.area.ha = ifelse(time == "Current", mod.high.area.ha, NA),
-         hist.cult.area.ha = ifelse(time == "Current", cult.area.ha, NA)) %>%
+ch.rcp85 <- c.rcp85 %>% select(-X) %>% pivot_wider(names_from = "suitability", values_from = "area.ha") %>%
+  mutate(cult.area.ha = Marginal + Moderately + Highly,
+         modhigh.area.ha = Moderately + Highly) %>%
+  select(-c(Unsuitable, Marginal, Moderately, Highly)) %>%
+  mutate(hist.cult.area.ha = ifelse(time == "Current", cult.area.ha, NA),
+         hist.modhigh.area.ha = ifelse(time == "Current", modhigh.area.ha, NA)) %>%
   group_by(country) %>%
-  fill(hist.mod.high.area.ha, .direction = "updown") %>%
+  fill(hist.modhigh.area.ha, .direction = "updown") %>%
   fill(hist.cult.area.ha, .direction = "updown") %>%
-  filter(suitability %in% c("Highly", "Moderately")) %>%
-  group_by(total.ha, RCP, time, land.cover, country, hist.cult.area.ha, hist.mod.high.area.ha) %>%
-  summarise(area.ha = sum(area.ha)) %>% mutate(RCP = "rcp8.5") %>%
-  pivot_wider(names_from = time, values_from = area.ha) %>%
-  mutate(ch.2099 = `2070-2099` - Current, ch.2069 = `2040-2069` - Current, ch.2039 = `2010-2039` - Current) %>%
-  select(-c(`2070-2099`, Current, `2040-2069`, `2010-2039`)) %>%
-  pivot_longer(!c(total.ha, hist.cult.area.ha, hist.mod.high.area.ha, RCP, land.cover, country), 
-               names_to = "change", values_to = "area.change.ha") %>%
-  group_by(country) %>% mutate(country.area = sum(unique(total.ha)),
-                               perc.mod.high = area.change.ha/hist.mod.high.area.ha *100,
-                               perc.cult = area.change.ha/hist.cult.area.ha *100)
+  filter(!(is.na(RCP))) %>%
+  mutate(ch.cult.area.ha = cult.area.ha - hist.cult.area.ha,
+         ch.modhigh.area.ha = modhigh.area.ha - hist.modhigh.area.ha,
+         ch.cult.area.perc = ch.cult.area.ha/hist.cult.area.ha *100,
+         ch.modhigh.area.perc = ch.modhigh.area.ha/hist.modhigh.area.ha *100) %>%
+  filter(country %in% c("United States of America", "Russia", "China", "Brazil", "Canada",
+                        "Indonesia"))
 
-
-
-c.rcp26.simple.plt <- ggplot(filter(c.rcp26.simple, change != "ch.2039"), aes(area.change.ha, country, colour = land.cover, shape = change)) +
+## cult area
+c.rcp26.cult.area.plt <- ggplot(filter(ch.rcp26, time != "2010-2039"), 
+                             aes(ch.cult.area.ha, country, fill = time)) +
   geom_rect(xmin = -Inf, xmax = Inf, ymin = 0.5, ymax = 1.5, colour = NA, fill = "grey75", alpha = .01) +
   geom_rect(xmin = -Inf, xmax = Inf, ymin = 2.5, ymax = 3.5, colour = NA, fill = "grey75", alpha = .01) +
   geom_rect(xmin = -Inf, xmax = Inf, ymin = 4.5, ymax = 5.5, colour = NA, fill = "grey75", alpha = .01) +
   geom_rect(xmin = -Inf, xmax = Inf, ymin = 6.5, ymax = 7.5, colour = NA, fill = "grey75", alpha = .01) +
   geom_rect(xmin = -Inf, xmax = Inf, ymin = 8.5, ymax = 9.5, colour = NA, fill = "grey75", alpha = .01) +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  geom_point(aes(group = change), position = position_dodge(width = 1), size = 3) +
-  xlab("Area change (ha)") +
+  geom_col(aes(group = time), position = position_dodge(width = 1), size = 1) +
+  xlab("Cultivable area change (ha)") +
   ylab("Country") +
-  scale_color_manual(values = c("#005a32", "#8c2d04")) +
+  scale_fill_manual(values = c("#5ab4ac", "#d8b365"), "Time") +
   theme_bw(base_size = 12)
 
 
-c.rcp85.simple.plt <- ggplot(filter(c.rcp85.simple, change != "ch.2039"), aes(area.change.ha, country, colour = land.cover, shape = change)) +
+c.rcp85.cult.area.plt <- ggplot(filter(ch.rcp85, time != "2010-2039"), 
+                             aes(ch.cult.area.ha, country, fill = time)) +
   geom_rect(xmin = -Inf, xmax = Inf, ymin = 0.5, ymax = 1.5, colour = NA, fill = "grey75", alpha = .01) +
   geom_rect(xmin = -Inf, xmax = Inf, ymin = 2.5, ymax = 3.5, colour = NA, fill = "grey75", alpha = .01) +
   geom_rect(xmin = -Inf, xmax = Inf, ymin = 4.5, ymax = 5.5, colour = NA, fill = "grey75", alpha = .01) +
   geom_rect(xmin = -Inf, xmax = Inf, ymin = 6.5, ymax = 7.5, colour = NA, fill = "grey75", alpha = .01) +
   geom_rect(xmin = -Inf, xmax = Inf, ymin = 8.5, ymax = 9.5, colour = NA, fill = "grey75", alpha = .01) +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  geom_point(aes(group = change), position = position_dodge(width = 1), size = 3) +
-  xlab("Area change (ha)") +
+  geom_col(aes(group = time), position = position_dodge(width = 1), size = 1) +
+  xlab("Cultivable area change (ha)") +
   ylab("Country") +
-  scale_color_manual(values = c("#005a32", "#8c2d04")) +
-  theme_bw(base_size = 12)  
+  scale_fill_manual(values = c("#5ab4ac", "#d8b365"), "Time") +
+  theme_bw(base_size = 12)
 
-c.simple.area.plt <- ggarrange(c.rcp26.simple.plt, c.rcp85.simple.plt, labels = c("RCP2.6", "RCP8.5"),
+## cult perc
+c.rcp26.cult.perc.plt <- ggplot(filter(ch.rcp26, time != "2010-2039"), 
+                                aes(ch.cult.area.perc, country, fill = time)) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 0.5, ymax = 1.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 2.5, ymax = 3.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 4.5, ymax = 5.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 6.5, ymax = 7.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 8.5, ymax = 9.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_col(aes(group = time), position = position_dodge(width = 1), size = 1) +
+  xlab("Cultivable area change (%)") +
+  ylab("Country") +
+  scale_fill_manual(values = c("#5ab4ac", "#d8b365"), "Time") +
+  theme_bw(base_size = 12)
+
+
+c.rcp85.cult.perc.plt <- ggplot(filter(ch.rcp85, time != "2010-2039"), 
+                                aes(ch.cult.area.perc, country, fill = time)) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 0.5, ymax = 1.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 2.5, ymax = 3.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 4.5, ymax = 5.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 6.5, ymax = 7.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 8.5, ymax = 9.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_col(aes(group = time), position = position_dodge(width = 1), size = 1) +
+  xlab("Cultivable area change (%)") +
+  ylab("Country") +
+  scale_fill_manual(values = c("#5ab4ac", "#d8b365"), "Time") +
+  theme_bw(base_size = 12)
+
+## modhigh area
+c.rcp26.modhigh.area.plt <- ggplot(filter(ch.rcp26, time != "2010-2039"), 
+                                aes(ch.modhigh.area.ha, country, fill = time)) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 0.5, ymax = 1.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 2.5, ymax = 3.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 4.5, ymax = 5.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 6.5, ymax = 7.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 8.5, ymax = 9.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_col(aes(group = time), position = position_dodge(width = 1), size = 1) +
+  xlab("Mod/high suitability area change (ha)") +
+  ylab("Country") +
+  scale_fill_manual(values = c("#5ab4ac", "#d8b365"), "Time") +
+  theme_bw(base_size = 12)
+
+
+c.rcp85.modhigh.area.plt <- ggplot(filter(ch.rcp85, time != "2010-2039"), 
+                                aes(ch.modhigh.area.ha, country, fill = time)) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 0.5, ymax = 1.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 2.5, ymax = 3.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 4.5, ymax = 5.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 6.5, ymax = 7.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 8.5, ymax = 9.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_col(aes(group = time), position = position_dodge(width = 1), size = 1) +
+  xlab("Mod/high suitability area change (ha)") +
+  ylab("Country") +
+  scale_fill_manual(values = c("#5ab4ac", "#d8b365"), "Time") +
+  theme_bw(base_size = 12)
+
+## modhigh perc
+c.rcp26.modhigh.perc.plt <- ggplot(filter(ch.rcp26, time != "2010-2039"), 
+                                   aes(ch.modhigh.area.perc, country, fill = time)) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 0.5, ymax = 1.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 2.5, ymax = 3.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 4.5, ymax = 5.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 6.5, ymax = 7.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 8.5, ymax = 9.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_col(aes(group = time), position = position_dodge(width = 1), size = 1) +
+  xlab("Mod/high suitability area change (%)") +
+  ylab("Country") +
+  scale_fill_manual(values = c("#5ab4ac", "#d8b365"), "Time") +
+  theme_bw(base_size = 12)
+
+
+c.rcp85.modhigh.perc.plt <- ggplot(filter(ch.rcp85, time != "2010-2039"), 
+                                   aes(ch.modhigh.area.perc, country, fill = time)) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 0.5, ymax = 1.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 2.5, ymax = 3.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 4.5, ymax = 5.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 6.5, ymax = 7.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 8.5, ymax = 9.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_col(aes(group = time), position = position_dodge(width = 1), size = 1) +
+  xlab("Mod/high suitability area change (%)") +
+  ylab("Country") +
+  scale_fill_manual(values = c("#5ab4ac", "#d8b365"), "Time") +
+  theme_bw(base_size = 12)
+
+library(ggpubr)
+## cult area
+c.cult.area.plt <- ggarrange(c.rcp26.cult.area.plt, c.rcp85.cult.area.plt, labels = c("RCP2.6", "RCP8.5"),
                                nrow = 1, common.legend = TRUE, legend = "bottom")
 
-ggsave(path = "Outputs/Figures/Countries", c.simple.area.plt, filename = "Country.area.change.png",  bg = "white",
+ggsave(path = "Outputs/Figures/Countries", c.cult.area.plt, filename = "country.cult.area.change.png",  bg = "white",
+       device = "png", width = 30, height = 12, units = "cm")
+
+## cult perc
+c.cult.perc.plt <- ggarrange(c.rcp26.cult.perc.plt, c.rcp85.cult.perc.plt, labels = c("RCP2.6", "RCP8.5"),
+                               nrow = 1, common.legend = TRUE, legend = "bottom")
+
+ggsave(path = "Outputs/Figures/Countries", c.cult.perc.plt, filename = "country.cult.perc.change.png",  bg = "white",
+       device = "png", width = 30, height = 12, units = "cm")
+
+## modhigh area
+c.modhigh.area.plt <- ggarrange(c.rcp26.modhigh.area.plt, c.rcp85.modhigh.area.plt, labels = c("RCP2.6", "RCP8.5"),
+                             nrow = 1, common.legend = TRUE, legend = "bottom")
+
+ggsave(path = "Outputs/Figures/Countries", c.modhigh.area.plt, filename = "country.modhigh.area.change.png",  bg = "white",
+       device = "png", width = 30, height = 12, units = "cm")
+
+## modhigh perc
+c.modhigh.perc.plt <- ggarrange(c.rcp26.modhigh.perc.plt, c.rcp85.modhigh.perc.plt, labels = c("RCP2.6", "RCP8.5"),
+                                nrow = 1, common.legend = TRUE, legend = "bottom")
+
+ggsave(path = "Outputs/Figures/Countries", c.modhigh.perc.plt, filename = "country.modhigh.perc.change.png",  bg = "white",
        device = "png", width = 30, height = 12, units = "cm")
 
 
-### perc suit
-c.rcp26.perc.mod.high.plt <- ggplot(filter(c.rcp26.simple, change != "ch.2039"), aes(perc.mod.high, country, colour = land.cover, shape = change)) +
-  geom_rect(xmin = -Inf, xmax = Inf, ymin = 0.5, ymax = 1.5, colour = NA, fill = "grey75", alpha = .01) +
-  geom_rect(xmin = -Inf, xmax = Inf, ymin = 2.5, ymax = 3.5, colour = NA, fill = "grey75", alpha = .01) +
-  geom_rect(xmin = -Inf, xmax = Inf, ymin = 4.5, ymax = 5.5, colour = NA, fill = "grey75", alpha = .01) +
-  geom_rect(xmin = -Inf, xmax = Inf, ymin = 6.5, ymax = 7.5, colour = NA, fill = "grey75", alpha = .01) +
-  geom_rect(xmin = -Inf, xmax = Inf, ymin = 8.5, ymax = 9.5, colour = NA, fill = "grey75", alpha = .01) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  geom_point(aes(group = change), position = position_dodge(width = 1), size = 3) +
-  xlab("% change from historic mod/high suitability") +
-  ylab("Country") +
-  scale_color_manual(values = c("#005a32", "#8c2d04")) +
-  theme_bw(base_size = 12) +
-  theme(legend.position = "bottom")
-
-
-c.rcp85.perc.mod.high.plt <- ggplot(filter(c.rcp85.simple, change != "ch.2039"), aes(perc.mod.high, country, colour = land.cover, shape = change)) +
-  geom_rect(xmin = -Inf, xmax = Inf, ymin = 0.5, ymax = 1.5, colour = NA, fill = "grey75", alpha = .01) +
-  geom_rect(xmin = -Inf, xmax = Inf, ymin = 2.5, ymax = 3.5, colour = NA, fill = "grey75", alpha = .01) +
-  geom_rect(xmin = -Inf, xmax = Inf, ymin = 4.5, ymax = 5.5, colour = NA, fill = "grey75", alpha = .01) +
-  geom_rect(xmin = -Inf, xmax = Inf, ymin = 6.5, ymax = 7.5, colour = NA, fill = "grey75", alpha = .01) +
-  geom_rect(xmin = -Inf, xmax = Inf, ymin = 8.5, ymax = 9.5, colour = NA, fill = "grey75", alpha = .01) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  geom_point(aes(group = change), position = position_dodge(width = 1), size = 3) +
-  xlab("% change from historic mod/high suitability") +
-  ylab("Country") +
-  scale_color_manual(values = c("#005a32", "#8c2d04")) +
-  theme_bw(base_size = 12)  +
-  theme(legend.position = "bottom")
-
-### perc cult
-c.rcp26.perc.cult.plt <- ggplot(filter(c.rcp26.simple, change != "ch.2039"), aes(perc.cult, country, colour = land.cover, shape = change)) +
-  geom_rect(xmin = -Inf, xmax = Inf, ymin = 0.5, ymax = 1.5, colour = NA, fill = "grey75", alpha = .01) +
-  geom_rect(xmin = -Inf, xmax = Inf, ymin = 2.5, ymax = 3.5, colour = NA, fill = "grey75", alpha = .01) +
-  geom_rect(xmin = -Inf, xmax = Inf, ymin = 4.5, ymax = 5.5, colour = NA, fill = "grey75", alpha = .01) +
-  geom_rect(xmin = -Inf, xmax = Inf, ymin = 6.5, ymax = 7.5, colour = NA, fill = "grey75", alpha = .01) +
-  geom_rect(xmin = -Inf, xmax = Inf, ymin = 8.5, ymax = 9.5, colour = NA, fill = "grey75", alpha = .01) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  geom_point(aes(group = change), position = position_dodge(width = 1), size = 3) +
-  xlab("% change from historic cultivable area") +
-  ylab("Country") +
-  scale_color_manual(values = c("#005a32", "#8c2d04")) +
-  theme_bw(base_size = 12) +
-  theme(legend.position = "bottom")
-
-
-c.rcp85.perc.cult.plt <- ggplot(filter(c.rcp85.simple, change != "ch.2039"), aes(perc.cult, country, colour = land.cover, shape = change)) +
-  geom_rect(xmin = -Inf, xmax = Inf, ymin = 0.5, ymax = 1.5, colour = NA, fill = "grey75", alpha = .01) +
-  geom_rect(xmin = -Inf, xmax = Inf, ymin = 2.5, ymax = 3.5, colour = NA, fill = "grey75", alpha = .01) +
-  geom_rect(xmin = -Inf, xmax = Inf, ymin = 4.5, ymax = 5.5, colour = NA, fill = "grey75", alpha = .01) +
-  geom_rect(xmin = -Inf, xmax = Inf, ymin = 6.5, ymax = 7.5, colour = NA, fill = "grey75", alpha = .01) +
-  geom_rect(xmin = -Inf, xmax = Inf, ymin = 8.5, ymax = 9.5, colour = NA, fill = "grey75", alpha = .01) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  geom_point(aes(group = change), position = position_dodge(width = 1), size = 3) +
-  xlab("% change from historic cultivable area") +
-  ylab("Country") +
-  scale_color_manual(values = c("#005a32", "#8c2d04")) +
-  theme_bw(base_size = 12)  +
-  theme(legend.position = "bottom")
-
-c.perc.mod.high.plt <- ggarrange(c.rcp26.perc.mod.high.plt, c.rcp85.perc.mod.high.plt, labels = c("RCP2.6", "RCP8.5"),
-                                 nrow = 1, common.legend = TRUE, legend = "bottom")
-
-c.perc.cult.plt <- ggarrange(c.rcp26.perc.cult.plt, c.rcp85.perc.cult.plt, labels = c("RCP2.6", "RCP8.5"),
-                             nrow = 1, common.legend = TRUE, legend = "bottom")
-
-ggsave(path = "Outputs/Figures/Countries", c.perc.mod.high.plt, filename = "Country.mod.high.perc.change.png",  bg = "white",
-       device = "png", width = 25, height = 12, units = "cm")
-
-ggsave(path = "Outputs/Figures/Countries", c.perc.cult.plt, filename = "Country.mod.cult.change.png",  bg = "white",
-       device = "png", width = 25, height = 12, units = "cm")
-
 #### Plot continent suitability area ####
 
-cont.rcp26.simple <- cont.lyr.dat %>% filter(suitability %in% c("Highly", "Moderately"), RCP %in% c("rcp2.6", NA)) %>%
-  group_by(total.ha, RCP, time, land.cover, continent) %>%
-  summarise(area.ha = sum(area.ha)) %>% mutate(RCP = "rcp2.6") %>%
-  pivot_wider(names_from = time, values_from = area.ha) %>%
-  mutate(ch.2099 = `2070-2099` - Current, ch.2069 = `2040-2069` - Current, ch.2039 = `2010-2039` - Current) %>%
-  select(-c(`2070-2099`, Current, `2040-2069`, `2010-2039`)) %>%
-  pivot_longer(!c(total.ha, RCP, land.cover, continent), names_to = "change", values_to = "area.change.ha")
+cont.rcp26.simple <- cont.lyr.dat %>% filter(RCP %in% c(NA, "rcp2.6"), land.cover == "Forestry") %>% 
+  select(-X) %>% 
+  pivot_wider(names_from = "suitability", values_from = "area.ha") %>%
+  mutate(cult.area.ha = Marginal + Moderately + Highly,
+         modhigh.area.ha = Moderately + Highly) %>%
+  select(-c(Unsuitable, Marginal, Moderately, Highly)) %>%
+  mutate(hist.cult.area.ha = ifelse(time == "Current", cult.area.ha, NA),
+         hist.modhigh.area.ha = ifelse(time == "Current", modhigh.area.ha, NA)) %>%
+  group_by(continent) %>%
+  fill(hist.modhigh.area.ha, .direction = "updown") %>%
+  fill(hist.cult.area.ha, .direction = "updown") %>%
+  filter(!(is.na(RCP))) %>%
+  mutate(ch.cult.area.ha = cult.area.ha - hist.cult.area.ha,
+         ch.modhigh.area.ha = modhigh.area.ha - hist.modhigh.area.ha,
+         ch.cult.area.perc = ch.cult.area.ha/hist.cult.area.ha *100,
+         ch.modhigh.area.perc = ch.modhigh.area.ha/hist.modhigh.area.ha *100)
 
-cont.rcp85.simple <- cont.lyr.dat %>% filter(suitability %in% c("Highly", "Moderately"), RCP %in% c("rcp8.5", NA)) %>%
-  group_by(total.ha, RCP, time, land.cover, continent) %>%
-  summarise(area.ha = sum(area.ha)) %>% mutate(RCP = "rcp8.5") %>%
-  pivot_wider(names_from = time, values_from = area.ha) %>%
-  mutate(ch.2099 = `2070-2099` - Current, ch.2069 = `2040-2069` - Current, ch.2039 = `2010-2039` - Current) %>%
-  select(-c(`2070-2099`, Current, `2040-2069`, `2010-2039`)) %>%
-  pivot_longer(!c(total.ha, RCP, land.cover, continent), names_to = "change", values_to = "area.change.ha")
+cont.rcp85.simple <- cont.lyr.dat %>% filter(RCP %in% c(NA, "rcp8.5"), land.cover == "Forestry") %>% select(-X) %>% 
+  pivot_wider(names_from = "suitability", values_from = "area.ha") %>%
+  mutate(cult.area.ha = Marginal + Moderately + Highly,
+         modhigh.area.ha = Moderately + Highly) %>%
+  select(-c(Unsuitable, Marginal, Moderately, Highly)) %>%
+  mutate(hist.cult.area.ha = ifelse(time == "Current", cult.area.ha, NA),
+         hist.modhigh.area.ha = ifelse(time == "Current", modhigh.area.ha, NA)) %>%
+  group_by(continent) %>%
+  fill(hist.modhigh.area.ha, .direction = "updown") %>%
+  fill(hist.cult.area.ha, .direction = "updown") %>%
+  filter(!(is.na(RCP))) %>%
+  mutate(ch.cult.area.ha = cult.area.ha - hist.cult.area.ha,
+         ch.modhigh.area.ha = modhigh.area.ha - hist.modhigh.area.ha,
+         ch.cult.area.perc = ch.cult.area.ha/hist.cult.area.ha *100,
+         ch.modhigh.area.perc = ch.modhigh.area.ha/hist.modhigh.area.ha *100)
 
-cont.rcp26.simple.plt <- ggplot(filter(cont.rcp26.simple, change != "ch.2039"), aes(area.change.ha, continent, colour = land.cover, shape = change)) +
+## mod/high area
+cont.rcp26.area.plt <- ggplot(filter(cont.rcp26.simple, time != "2010-2039"), 
+                                aes(ch.modhigh.area.ha, continent, fill = time)) +
   geom_rect(xmin = -Inf, xmax = Inf, ymin = 0.5, ymax = 1.5, colour = NA, fill = "grey75", alpha = .01) +
   geom_rect(xmin = -Inf, xmax = Inf, ymin = 2.5, ymax = 3.5, colour = NA, fill = "grey75", alpha = .01) +
   geom_rect(xmin = -Inf, xmax = Inf, ymin = 4.5, ymax = 5.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 6.5, ymax = 7.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 8.5, ymax = 9.5, colour = NA, fill = "grey75", alpha = .01) +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  geom_point(aes(group = change), position = position_dodge(width = 1), size = 3) +
-  scale_color_manual(values = c("#005a32", "#8c2d04")) +
-  theme_bw()
+  geom_col(aes(group = time), position = position_dodge(width = 1), size = 1) +
+  xlab("Mod/high suitability area change (ha)") +
+  ylab("Country") +
+  scale_fill_manual(values = c("#5ab4ac", "#d8b365"), "Time") +
+  theme_bw(base_size = 12)
 
-cont.rcp85.simple.plt <- ggplot(filter(cont.rcp85.simple, change != "ch.2039"), aes(area.change.ha, continent, colour = land.cover, shape = change)) +
+cont.rcp85.area.plt <- ggplot(filter(cont.rcp85.simple, time != "2010-2039"), 
+                                aes(ch.modhigh.area.ha, continent, fill = time)) +
   geom_rect(xmin = -Inf, xmax = Inf, ymin = 0.5, ymax = 1.5, colour = NA, fill = "grey75", alpha = .01) +
   geom_rect(xmin = -Inf, xmax = Inf, ymin = 2.5, ymax = 3.5, colour = NA, fill = "grey75", alpha = .01) +
   geom_rect(xmin = -Inf, xmax = Inf, ymin = 4.5, ymax = 5.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 6.5, ymax = 7.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 8.5, ymax = 9.5, colour = NA, fill = "grey75", alpha = .01) +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  geom_point(aes(group = change), position = position_dodge(width = 1), size = 3) +
-  scale_color_manual(values = c("#005a32", "#8c2d04")) +
-  theme_bw()
+  geom_col(aes(group = time), position = position_dodge(width = 1), size = 1) +
+  xlab("Mod/high suitability area change (ha)") +
+  ylab("Country") +
+  scale_fill_manual(values = c("#5ab4ac", "#d8b365"), "Time") +
+  theme_bw(base_size = 12)
 
-ggsave(path = "Outputs/Figures/Continents", cont.rcp26.simple.plt, filename = "Continent.area.change.rcp26.png",  bg = "white",
-       device = "png", width = 17, height = 12, units = "cm")
-ggsave(path = "Outputs/Figures/Continents", cont.rcp85.simple.plt, filename = "Continent.area.change.rcp85.png",  bg = "white",
-       device = "png", width = 17, height = 12, units = "cm")
-#### arrangement ####
+## mod/high perc 
+cont.rcp26.perc.plt <- ggplot(filter(cont.rcp26.simple, time != "2010-2039"), 
+                              aes(ch.modhigh.area.perc, continent, fill = time)) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 0.5, ymax = 1.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 2.5, ymax = 3.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 4.5, ymax = 5.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 6.5, ymax = 7.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 8.5, ymax = 9.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_col(aes(group = time), position = position_dodge(width = 1), size = 1) +
+  xlab("Mod/high suitability area change (%)") +
+  ylab("Country") +
+  scale_fill_manual(values = c("#5ab4ac", "#d8b365"), "Time") +
+  theme_bw(base_size = 12)
 
-168596211 + 736417454
-1003604298 -905013665
-98,590,633
+cont.rcp85.perc.plt <- ggplot(filter(cont.rcp85.simple, time != "2010-2039"), 
+                              aes(ch.modhigh.area.perc, continent, fill = time)) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 0.5, ymax = 1.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 2.5, ymax = 3.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 4.5, ymax = 5.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 6.5, ymax = 7.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 8.5, ymax = 9.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_col(aes(group = time), position = position_dodge(width = 1), size = 1) +
+  xlab("Mod/high suitability area change (%)") +
+  ylab("Country") +
+  scale_fill_manual(values = c("#5ab4ac", "#d8b365"), "Time") +
+  theme_bw(base_size = 12)
 
-country.border <- world %>% filter(SOVEREIGNT == "Portugal")
+## mod high area
+cont.modhigh.area.plt <- ggarrange(cont.rcp26.area.plt, cont.rcp85.area.plt, labels = c("RCP2.6", "RCP8.5"),
+                                nrow = 1, common.legend = TRUE, legend = "bottom")
 
-c.extent <- terra::ext(country.border)
-r.lyr.crop.f <- terra::crop(forest, c.extent)
-mask.c.area.f <- mask(r.lyr.crop.f, vect(country.border))  
+ggsave(path = "Outputs/Figures/Continents", cont.modhigh.area.plt, filename = "continent.modhigh.area.change.png",  bg = "white",
+       device = "png", width = 30, height = 12, units = "cm")
 
-r.lyr.crop.nf <- terra::crop(nforest, c.extent)
-mask.c.area.nf <- mask(r.lyr.crop.nf, vect(country.border))
+## mod high perc
+cont.modhigh.perc.plt <- ggarrange(cont.rcp26.perc.plt, cont.rcp85.perc.plt, labels = c("RCP2.6", "RCP8.5"),
+                                   nrow = 1, common.legend = TRUE, legend = "bottom")
 
-ggplot() +
-  geom_spatraster(data = mask.c.area.f) +
-  geom_spatraster(data = mask.c.area.nf) +
-  geom_spatvector(data = country.border, fill = NA) +
-  scale_fill_continuous(na.value = NA)
+ggsave(path = "Outputs/Figures/Continents", cont.modhigh.perc.plt, filename = "continent.modhigh.perc.change.png",  bg = "white",
+       device = "png", width = 30, height = 12, units = "cm")
 
-expanse(vect(country.border), unit = "km")
-expanse(mask.c.area.f, unit = "km")
-expanse(mask.c.area.nf, unit = "km")
-45659.83 + 42858.85
-
-forest <- rast("Data/CurtisLayers/curtis.forestry.2010.2039.rcp2p6.ag.suitability.classified 1.tif")
-nforest <- rast("Data/CurtisLayers/curtis.no.forestry.2010.2039.rcp2p6.ag.suitability.classified.tif")
-
-plot(nforest)
-
-ggplot() +
-  geom_spatraster(data = forest) +
-  geom_spatraster(data = nforest) +
-  scal
