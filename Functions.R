@@ -79,3 +79,17 @@ agri.plot.func <- function(data, percent) {
     theme(axis.text.x = element_text(angle = 45), legend.position = "none")
 }
 
+
+#### Fast mean ####
+#https://stackoverflow.com/questions/10397574/efficiently-compute-mean-and-standard-deviation-from-a-frequency-table
+
+fastmean <- function(dat) {
+  with(dat, sum(area*value)/sum(area)) 
+}
+
+#### Fast SD ####
+#https://stackoverflow.com/questions/10397574/efficiently-compute-mean-and-standard-deviation-from-a-frequency-table
+fastSD <- function(dat) {
+  mu <- fastmean(dat)
+  with(dat, sqrt(sum(area*(value-mu)^2)/(sum(area)-1) ) )
+}
