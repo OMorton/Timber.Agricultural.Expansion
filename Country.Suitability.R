@@ -8,17 +8,19 @@ source("Functions.r")
 
 #### Country level ####
 ## Get country outlines
-world <- ne_download(scale = "large", returnclass = 'sf')
+#world <- ne_download(scale = "large", returnclass = 'sf')
 layers <- list.files("Data/CurtisLayers/", full.names = TRUE)[1:14]
-timber.countries <- c("United States of America", "Russia", "China", "Brazil", "Canada",
-                      "Indonesia", "Sweden", "Finland", "Germany", "India")
+timber.countries <- c("USA", "Russia", "China", "Brazil", "Canada")
+timber.codes <- c("USA", "RUS", "CHN", "BRA", "CAN")
 
 c.lyr.dat <- data.frame()
 
 for (i in 1:length(timber.countries)) {
   
   country.i <- timber.countries[i]
-  country.border <- world %>% filter(NAME == country.i)
+  code.i <- timber.codes[i]
+  
+  country.border <- vect(paste0("Data/GADM/GADM_",country.i,"/gadm41_", code.i, "_0.shp" ))
   cat("Working on ", country.i, ": ", i, "out of", length(timber.countries), '\n')
   
   for (j in 1:length(layers)) {
@@ -36,7 +38,7 @@ for (i in 1:length(timber.countries)) {
       land.cover <- "Forestry"}
       
       c.extent <- terra::ext(country.border)
-      mask.c.area <- rast(lyr) %>% crop(., c.extent) %>%mask(., vect(country.border))  
+      mask.c.area <- rast(lyr) %>% crop(., c.extent) %>%mask(., country.border)  
                           
       tot <- mask.c.area %>% expanse(unit = "ha")
       Unsuitable <- mask.c.area %>% ifel(. != 1, NA, .) %>% expanse(unit = "ha")
