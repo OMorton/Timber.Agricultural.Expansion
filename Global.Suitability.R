@@ -434,3 +434,213 @@ area.cult.lat.plt <- ggarrange(rcp26.area.cult.lat.plt, rcp85.area.cult.lat.plt,
 
 ggsave(path = "Outputs/Figures/Global", area.cult.lat.plt, filename = "area.cult.lat.png",  bg = "white",
        device = "png", width = 30, height = 18, units = "cm")
+
+
+#### Plotting - Density plots of suitability values ####
+
+## RCP 2.6 ##
+## Current ##
+forestry.ag.suitability.current<- rast("Data/CurtisLayers/Raw_suitability_scores/curtis.forestry.current.ag.suitability.tif")
+plot(forestry.ag.suitability.current)
+forestry.ag.suitability.current.freq<- data.frame(expanse(forestry.ag.suitability.current, unit = "ha", byValue = TRUE))
+forestry.ag.suitability.current.freq$weights<-forestry.ag.suitability.current.freq$area/sum(forestry.ag.suitability.current.freq$area)
+forestry.ag.suitability.current.freq$scenario<- "Historic"
+## 2010-2039 ##
+forestry.ag.suitability.2010.2039.rcp2p6<- rast("Data/CurtisLayers/Raw_suitability_scores/curtis.forestry.2010.2039.rcp2p6.ag.suitability.tif")
+plot(forestry.ag.suitability.2010.2039.rcp2p6)
+forestry.ag.suitability.2010.2039.rcp2p6.freq<- data.frame(expanse(forestry.ag.suitability.2010.2039.rcp2p6, unit = "ha", byValue = TRUE))
+forestry.ag.suitability.2010.2039.rcp2p6.freq$weights<-forestry.ag.suitability.2010.2039.rcp2p6.freq$area/sum(forestry.ag.suitability.2010.2039.rcp2p6.freq$area)
+forestry.ag.suitability.2010.2039.rcp2p6.freq$scenario<- "2010-2039"
+## 2040-2069 ##
+forestry.ag.suitability.2040.2069.rcp2p6<- rast("Data/CurtisLayers/Raw_suitability_scores/curtis.forestry.2040.2069.rcp2p6.ag.suitability.tif")
+plot(forestry.ag.suitability.2040.2069.rcp2p6)
+forestry.ag.suitability.2040.2069.rcp2p6.freq<- data.frame(expanse(forestry.ag.suitability.2040.2069.rcp2p6, unit = "ha", byValue = TRUE))
+forestry.ag.suitability.2040.2069.rcp2p6.freq$weights<-forestry.ag.suitability.2040.2069.rcp2p6.freq$area/sum(forestry.ag.suitability.2040.2069.rcp2p6.freq$area)
+forestry.ag.suitability.2040.2069.rcp2p6.freq$scenario<- "2040-2069"
+## 2070-2099 ##
+forestry.ag.suitability.2070.2099.rcp2p6<- rast("Data/CurtisLayers/Raw_suitability_scores/curtis.forestry.2070.2099.rcp2p6.ag.suitability.tif")
+plot(forestry.ag.suitability.2070.2099.rcp2p6)
+forestry.ag.suitability.2070.2099.rcp2p6.freq<-data.frame(expanse(forestry.ag.suitability.2070.2099.rcp2p6, unit = "ha", byValue = TRUE))
+forestry.ag.suitability.2070.2099.rcp2p6.freq$weights<-forestry.ag.suitability.2070.2099.rcp2p6.freq$area/sum(forestry.ag.suitability.2070.2099.rcp2p6.freq$area)
+forestry.ag.suitability.2070.2099.rcp2p6.freq$scenario<- "2070-2099"
+
+# put together
+rcp2p6.all.periods.freq.df<- rbind(forestry.ag.suitability.current.freq, forestry.ag.suitability.2010.2039.rcp2p6.freq,
+                                   forestry.ag.suitability.2040.2069.rcp2p6.freq,forestry.ag.suitability.2070.2099.rcp2p6.freq)
+rcp2p6.all.periods.freq.df$scenario<- factor(rcp2p6.all.periods.freq.df$scenario, levels = c("2070-2099", "2040-2069", "2010-2039", "Historic"))
+rcp2p6.all.periods.freq.df$layer <- "RCP 2.6"
+
+rcp2p6.all.periods.freq.df <- rcp2p6.all.periods.freq.df %>% group_by(layer, scenario) %>% 
+  mutate(cumfreq = cumsum(area)/sum(area),
+         q05 = value[cumfreq >= 0.05][1],
+         q25 = value[cumfreq >= 0.25][1],
+         q50 = value[cumfreq >= 0.5][1],
+         q75 = value[cumfreq >= 0.75][1],
+         q90 = value[cumfreq >= 0.90][1],
+         ypos = case_when(scenario == "Historic" ~ -0.001,
+                          scenario == "2040-2069" ~ -0.002,
+                          scenario == "2070-2099" ~ -0.003)) %>%
+  filter(scenario != "2010-2039")
+
+# plot
+ggplot(rcp2p6.all.periods.freq.df,aes(x=value,weight=weights, fill = scenario)) + geom_density(color="black", alpha = 0.7)+scale_fill_viridis_d()+
+  scale_x_continuous(limits = c(0,100), breaks = c(0,25,50,75,100))+theme_classic(base_size = 15)+labs(x="Agricultural Suitability", y="Density", fill = "Time Period")
+
+
+## RCP 8.5 ##
+## 2010-2039 ##
+forestry.ag.suitability.2010.2039.rcp8p5<- rast("Data/CurtisLayers/Raw_suitability_scores/curtis.forestry.2010.2039.rcp8p5.ag.suitability.tif")
+plot(forestry.ag.suitability.2010.2039.rcp8p5)
+forestry.ag.suitability.2010.2039.rcp8p5.freq<- data.frame(expanse(forestry.ag.suitability.2010.2039.rcp8p5, unit = "ha", byValue = TRUE))
+forestry.ag.suitability.2010.2039.rcp8p5.freq$weights<-forestry.ag.suitability.2010.2039.rcp8p5.freq$area/sum(forestry.ag.suitability.2010.2039.rcp8p5.freq$area)
+forestry.ag.suitability.2010.2039.rcp8p5.freq$scenario<- "2010-2039"
+## 2040-2069 ##
+forestry.ag.suitability.2040.2069.rcp8p5<- rast("Data/CurtisLayers/Raw_suitability_scores/curtis.forestry.2040.2069.rcp8p5.ag.suitability.tif")
+plot(forestry.ag.suitability.2040.2069.rcp8p5)
+forestry.ag.suitability.2040.2069.rcp8p5.freq<- data.frame(expanse(forestry.ag.suitability.2040.2069.rcp8p5, unit = "ha", byValue = TRUE))
+forestry.ag.suitability.2040.2069.rcp8p5.freq$weights<-forestry.ag.suitability.2040.2069.rcp8p5.freq$area/sum(forestry.ag.suitability.2040.2069.rcp8p5.freq$area)
+forestry.ag.suitability.2040.2069.rcp8p5.freq$scenario<- "2040-2069"
+## 2070-2099 ##
+forestry.ag.suitability.2070.2099.rcp8p5<- rast("Data/CurtisLayers/Raw_suitability_scores/curtis.forestry.2070.2099.rcp8p5.ag.suitability.tif")
+plot(forestry.ag.suitability.2070.2099.rcp8p5)
+forestry.ag.suitability.2070.2099.rcp8p5.freq<- data.frame(expanse(forestry.ag.suitability.2070.2099.rcp8p5, unit = "ha", byValue = TRUE))
+forestry.ag.suitability.2070.2099.rcp8p5.freq$weights<-forestry.ag.suitability.2070.2099.rcp8p5.freq$area/sum(forestry.ag.suitability.2070.2099.rcp8p5.freq$area)
+forestry.ag.suitability.2070.2099.rcp8p5.freq$scenario<- "2070-2099"
+
+# put together
+rcp8p5.all.periods.freq.df<- rbind(forestry.ag.suitability.current.freq, forestry.ag.suitability.2010.2039.rcp8p5.freq,
+                                   forestry.ag.suitability.2040.2069.rcp8p5.freq,forestry.ag.suitability.2070.2099.rcp8p5.freq)
+rcp8p5.all.periods.freq.df$scenario<- factor(rcp8p5.all.periods.freq.df$scenario, levels = c("2070-2099", "2040-2069", "2010-2039", "Historic"))
+rcp8p5.all.periods.freq.df$layer <- "RCP 8.5"
+# plot
+
+rcp8p5.all.periods.freq.df <- rcp8p5.all.periods.freq.df %>% group_by(layer, scenario) %>% 
+  mutate(cumfreq = cumsum(area)/sum(area),
+         q05 = value[cumfreq >= 0.05][1],
+         q25 = value[cumfreq >= 0.25][1],
+         q50 = value[cumfreq >= 0.5][1],
+         q75 = value[cumfreq >= 0.75][1],
+         q90 = value[cumfreq >= 0.90][1],
+         ypos = case_when(scenario == "Historic" ~ -0.001,
+                          scenario == "2040-2069" ~ -0.002,
+                          scenario == "2070-2099" ~ -0.003)) %>%
+  filter(scenario != "2010-2039")
+
+
+tot.dens.85.plt <- ggplot(rcp8p5.all.periods.freq.df,aes(x=value,weight=weights, fill = scenario, colour = scenario)) + 
+  geom_density(color="black", alpha = 0.7, adjust = 0.3)+
+  geom_errorbarh(aes(xmin = q05, xmax = q90, y =ypos), size =1, height = 0) +
+  geom_errorbarh(aes(xmin = q25, xmax = q75, y =ypos), size =2, height = 0) +
+  geom_point(aes(x = q50, y = ypos), size =3, shape = 21, colour = "black") +
+  coord_cartesian(ylim = c(-0.004, 0.032)) +
+  scale_fill_manual(breaks = c("Historic", "2040-2069", "2070-2099"), values = c("grey85", "#21918c", "#440154"), "Time Period") +
+  scale_colour_manual(breaks = c("Historic", "2040-2069", "2070-2099"), values = c("grey85", "#21918c", "#440154"), "Time Period") +
+  scale_x_continuous(limits = c(0,100), breaks = c(0,25,50,75,100))+
+  labs(x="Agricultural Suitability", y="Density", fill = "Time Period") +
+  theme_bw(base_size = 10) +
+  theme(legend.position = "bottom", 
+        legend.title = element_text(face = "bold"))
+
+tot.dens.26.plt <- ggplot(rcp2p6.all.periods.freq.df,aes(x=value,weight=weights, fill = scenario, colour = scenario)) + 
+  geom_density(color="black", alpha = 0.7, adjust = 0.3)+
+  geom_errorbarh(aes(xmin = q05, xmax = q90, y =ypos), size =1, height = 0) +
+  geom_errorbarh(aes(xmin = q25, xmax = q75, y =ypos), size =2, height = 0) +
+  geom_point(aes(x = q50, y = ypos), size =3, shape = 21, colour = "black") +
+  coord_cartesian(ylim = c(-0.004, 0.032)) +
+  scale_fill_manual(breaks = c("Historic", "2040-2069", "2070-2099"), values = c("grey85", "#21918c", "#440154"), "Time Period") +
+  scale_colour_manual(breaks = c("Historic", "2040-2069", "2070-2099"), values = c("grey85", "#21918c", "#440154"), "Time Period") +
+  scale_x_continuous(limits = c(0,100), breaks = c(0,25,50,75,100))+
+  labs(x="Agricultural Suitability", y="Density", fill = "Time Period") +
+  theme_bw(base_size = 10) +
+  theme(legend.position = "bottom", 
+        legend.title = element_text(face = "bold"))
+  
+empty <- ggplot() + theme_void()
+tot.dens.plt <- ggarrange(empty,
+  ggarrange(tot.dens.26.plt, tot.dens.85.plt, labels = c("A.", "B."), common.legend = TRUE, legend = "bottom"),
+  heights = c(0.05, 1), nrow = 2)
+
+tot.dens.plt2 <- tot.dens.plt +  
+  annotation_custom(text_grob("RCP2.6",face = "bold", size = 12), 
+                    xmin = 0.3, xmax = 0.3, ymin = 0.97, ymax = 0.97)+
+  annotation_custom(text_grob("RCP8.5",face = "bold", size = 12), 
+                    xmin = 0.8, xmax = 0.8, ymin = 0.97, ymax = 0.97)
+
+ggsave(path = "Outputs/Figures/Global", tot.dens.plt2, 
+       filename = "glob.dens.plt.png",  bg = "white",
+       device = "png", width = 25, height = 15, units = "cm")
+
+tot.dens.26.alt.plt <- ggplot(rcp2p6.all.periods.freq.df,aes(x=value,weight=weights, fill = scenario, colour = scenario)) + 
+  geom_density(color="black", alpha = 0.7, adjust = 0.3)+
+  geom_errorbarh(aes(xmin = q05, xmax = q90, y =-0.003), size =1, height = 0) +
+  geom_errorbarh(aes(xmin = q25, xmax = q75, y =-0.003), size =2, height = 0) +
+  geom_point(aes(x = q50, y = -0.003), size =3, shape = 21, colour = "black") +
+  geom_vline(aes(xintercept = q50, colour = scenario), linetype = "dashed", size = 1) +
+  coord_cartesian(ylim = c(-0.004, 0.032)) +
+  scale_fill_manual(breaks = c("Historic", "2040-2069", "2070-2099"), values = c("grey65", "#21918c", "#440154"), "Time Period") +
+  scale_colour_manual(breaks = c("Historic", "2040-2069", "2070-2099"), values = c("grey65", "#21918c", "#440154"), "Time Period") +
+  scale_x_continuous(limits = c(0,100), breaks = c(0,25,50,75,100))+
+  labs(x="Agricultural Suitability", y="Density", fill = "Time Period") +
+  facet_wrap(~scenario, nrow = 3, strip.position = "left") +
+  theme_bw(base_size = 10) +
+  theme(legend.position = "bottom",legend.title = element_text(face = "bold"),
+        strip.background = element_blank(), strip.text = element_text(face = "bold", size = 10),
+        axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank())
+
+tot.dens.85.alt.plt <- ggplot(rcp8p5.all.periods.freq.df,aes(x=value,weight=weights, fill = scenario, colour = scenario)) + 
+  geom_density(color="black", alpha = 0.7, adjust = 0.3)+
+  geom_errorbarh(aes(xmin = q05, xmax = q90, y =-0.003), size =1, height = 0) +
+  geom_errorbarh(aes(xmin = q25, xmax = q75, y =-0.003), size =2, height = 0) +
+  geom_point(aes(x = q50, y = -0.003), size =3, shape = 21, colour = "black") +
+  geom_vline(aes(xintercept = q50, colour = scenario), linetype = "dashed", size = 1) +
+  coord_cartesian(ylim = c(-0.004, 0.032)) +
+  scale_fill_manual(breaks = c("Historic", "2040-2069", "2070-2099"), values = c("grey65", "#21918c", "#440154"), "Time Period") +
+  scale_colour_manual(breaks = c("Historic", "2040-2069", "2070-2099"), values = c("grey65", "#21918c", "#440154"), "Time Period") +
+  scale_x_continuous(limits = c(0,100), breaks = c(0,25,50,75,100))+
+  labs(x="Agricultural Suitability", y="Density", fill = "Time Period") +
+  facet_wrap(~scenario, nrow = 3, strip.position = "left") +
+  theme_bw(base_size = 10) +
+  theme(legend.position = "bottom",legend.title = element_text(face = "bold"),
+        strip.background = element_blank(), strip.text = element_text(face = "bold", size = 10),
+        axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank())
+
+tot.dens.alt.plt <- ggarrange(empty,
+                          ggarrange(tot.dens.26.alt.plt, tot.dens.85.alt.plt, labels = c("A.", "B."), common.legend = TRUE, legend = "bottom"),
+                          heights = c(0.05, 1), nrow = 2)
+
+tot.dens.alt.plt2 <- tot.dens.alt.plt +  
+  annotation_custom(text_grob("RCP2.6",face = "bold", size = 12), 
+                    xmin = 0.3, xmax = 0.3, ymin = 0.97, ymax = 0.97)+
+  annotation_custom(text_grob("RCP8.5",face = "bold", size = 12), 
+                    xmin = 0.8, xmax = 0.8, ymin = 0.97, ymax = 0.97)
+
+ggsave(path = "Outputs/Figures/Global", tot.dens.alt.plt2, 
+       filename = "glob.dens.alt.plt.png",  bg = "white",
+       device = "png", width = 25, height = 15, units = "cm")
+
+ggplot(rcp8p5.all.periods.freq.df,aes(x=value,y=scenario, height = weights, fill = scenario, colour = scenario)) + 
+  geom_density_ridges(color="black", alpha = 0.7, scale = 1, stat = "identity", bandwidth = 1)+
+  geom_point(aes(x = q50, y=scenario), position = position_nudge(y = -.25), size = 3) +
+  geom_errorbarh(aes(xmin = q25, xmax = q75), position = position_nudge(y = -0.25))
+  scale_fill_viridis_d()
+
+# out together in faceted plot
+both.scenarios.all.periods.freq.df<- rbind(rcp8p5.all.periods.freq.df,rcp2p6.all.periods.freq.df)
+# viridis
+
+
+both.scenarios.all.periods.density.plot<- ggplot(filter(both.scenarios.all.periods.freq.df,scenario != "2010-2039"), aes(x=value,weight=weights, fill = scenario, colour = scenario)) + geom_density(colour = "black", alpha = 0.7, bw = 3)+scale_fill_viridis_d(breaks=c('Historic', '2010-2039', '2040-2069', '2070-2099'))+
+  scale_x_continuous(limits = c(0,100), breaks = c(0,25,50,75,100))+theme_classic(base_size = 10)+theme(legend.position = "bottom", legend.title = element_text(face = "bold"),
+                                                                                                        strip.background = element_blank(),
+                                                                                                        strip.text.x = element_blank())+labs(x="Agricultural Suitability", y="Density", fill = "Time Period")+
+  facet_wrap(~layer)
+# brown green
+both.scenarios.all.periods.density.plot<- ggplot(filter(both.scenarios.all.periods.freq.df,scenario != "2010-2039") , aes(x=value,weight=weights, fill = scenario, colour = scenario)) + geom_density(colour = "black", alpha = 0.7,bw = 3)+scale_fill_manual(values = c('#365c8d','#74c476',"#5ab4ac", "#d8b365"), breaks=c('Historic', '2010-2039', '2040-2069', '2070-2099'))+
+  scale_x_continuous(limits = c(0,100), breaks = c(0,25,50,75,100))+theme_classic(base_size = 10)+theme(legend.position = "bottom", legend.title = element_text(face = "bold"),
+                                                                                                        strip.background = element_blank(),
+                                                                                                        strip.text.x = element_blank())+labs(x="Agricultural Suitability", y="Density", fill = "Time Period")+
+  facet_wrap(~layer)
+
+## save
+ggsave(file = "Data/early.plots/figure.3.suitability.density.plots.no.2010.2039.png", width = 9.645833/1.5, height = 6.114583/1.5, device='png', dpi=750, bg = "white")
+ggsave(file = "Data/early.plots/figure.3.suitability.density.plots.light.grey.green.gold.png", width = 9.645833/1.5, height = 6.114583/1.5, device='png', dpi=750, bg = "white")
