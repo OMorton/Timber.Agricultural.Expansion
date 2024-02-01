@@ -532,6 +532,9 @@ tot.dens.85.plt <- ggplot(rcp8p5.all.periods.freq.df,aes(x=value,weight=weights,
   geom_errorbarh(aes(xmin = q05, xmax = q90, y =ypos), size =1, height = 0) +
   geom_errorbarh(aes(xmin = q25, xmax = q75, y =ypos), size =2, height = 0) +
   geom_point(aes(x = q50, y = ypos), size =3, shape = 21, colour = "black") +
+  #geom_vline(xintercept = 33, linetype = "dashed", linewidth = 0.75) +
+  #annotate("text", label = "Unproductive", x = 16.5, y = 0.03, size = 2.75, fontface = "bold") +
+  #annotate("text", label = "Productive", x = 55, y = 0.03, size = 2.75, fontface = "bold") +
   coord_cartesian(ylim = c(-0.004, 0.032)) +
   scale_fill_manual(breaks = c("Historic", "2040-2069", "2070-2099"), values = c("grey85", "#21918c", "#440154"), "Time Period") +
   scale_colour_manual(breaks = c("Historic", "2040-2069", "2070-2099"), values = c("grey85", "#21918c", "#440154"), "Time Period") +
@@ -546,6 +549,9 @@ tot.dens.26.plt <- ggplot(rcp2p6.all.periods.freq.df,aes(x=value,weight=weights,
   geom_errorbarh(aes(xmin = q05, xmax = q90, y =ypos), size =1, height = 0) +
   geom_errorbarh(aes(xmin = q25, xmax = q75, y =ypos), size =2, height = 0) +
   geom_point(aes(x = q50, y = ypos), size =3, shape = 21, colour = "black") +
+  #geom_vline(xintercept = 33, linetype = "dashed", linewidth = 0.75) +
+  #annotate("text", label = "Unproductive", x = 16.5, y = 0.03, size = 2.75, fontface = "bold") +
+  #annotate("text", label = "Productive", x = 55, y = 0.03, size = 2.75, fontface = "bold") +
   coord_cartesian(ylim = c(-0.004, 0.032)) +
   scale_fill_manual(breaks = c("Historic", "2040-2069", "2070-2099"), values = c("grey85", "#21918c", "#440154"), "Time Period") +
   scale_colour_manual(breaks = c("Historic", "2040-2069", "2070-2099"), values = c("grey85", "#21918c", "#440154"), "Time Period") +
@@ -557,7 +563,7 @@ tot.dens.26.plt <- ggplot(rcp2p6.all.periods.freq.df,aes(x=value,weight=weights,
   
 empty <- ggplot() + theme_void()
 tot.dens.plt <- ggarrange(empty,
-  ggarrange(tot.dens.26.plt, tot.dens.85.plt, labels = c("A.", "B."), common.legend = TRUE, legend = "bottom"),
+  ggarrange(tot.dens.26.plt, tot.dens.85.plt, labels = c("a", "b"), common.legend = TRUE, legend = "bottom"),
   heights = c(0.05, 1), nrow = 2)
 
 tot.dens.plt2 <- tot.dens.plt +  
@@ -568,7 +574,7 @@ tot.dens.plt2 <- tot.dens.plt +
 
 ggsave(path = "Outputs/Figures/Global", tot.dens.plt2, 
        filename = "glob.dens.plt.png",  bg = "white",
-       device = "png", width = 25, height = 15, units = "cm")
+       device = "png", width = 18, height = 12, units = "cm")
 
 tot.dens.26.alt.plt <- ggplot(rcp2p6.all.periods.freq.df,aes(x=value,weight=weights, fill = scenario, colour = scenario)) + 
   geom_density(color="black", alpha = 0.7, adjust = 0.3)+
@@ -605,7 +611,7 @@ tot.dens.85.alt.plt <- ggplot(rcp8p5.all.periods.freq.df,aes(x=value,weight=weig
         axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank())
 
 tot.dens.alt.plt <- ggarrange(empty,
-                          ggarrange(tot.dens.26.alt.plt, tot.dens.85.alt.plt, labels = c("A.", "B."), common.legend = TRUE, legend = "bottom"),
+                          ggarrange(tot.dens.26.alt.plt, tot.dens.85.alt.plt, labels = c("a", "b"), common.legend = TRUE, legend = "bottom"),
                           heights = c(0.05, 1), nrow = 2)
 
 tot.dens.alt.plt2 <- tot.dens.alt.plt +  
@@ -616,7 +622,7 @@ tot.dens.alt.plt2 <- tot.dens.alt.plt +
 
 ggsave(path = "Outputs/Figures/Global", tot.dens.alt.plt2, 
        filename = "glob.dens.alt.plt.png",  bg = "white",
-       device = "png", width = 25, height = 15, units = "cm")
+       device = "png", width = 18, height = 12, units = "cm")
 
 ggplot(rcp8p5.all.periods.freq.df,aes(x=value,y=scenario, height = weights, fill = scenario, colour = scenario)) + 
   geom_density_ridges(color="black", alpha = 0.7, scale = 1, stat = "identity", bandwidth = 1)+
