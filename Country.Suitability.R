@@ -127,6 +127,78 @@ write.csv(diff.dat, "Data/CountryArea/Timber.top5.changes.classified.csv")
 diff.dat %>% group_by(rcp, country) %>% tally(area)
 diff.dat %>% group_by(rcp) %>% tally(area)
 
+#### All countries ####
+
+world <- sf::st_read("Data/GADMworld/gadm_410-levels.gpkg", layer = "ADM_0")
+world.l <- sf::st_layers("Data/GADMworld/gadm_410-levels.gpkg")
+
+world <- rnaturalearth::ne_countries(returnclass = "sf")
+c.world <- world[15,]
+
+c.world$name
+terra::ext(vect(c.world$geometry))
+
+
+c.lyr.dat[1,]
+plot(world)
+
+all.c.dat <- data.frame()
+
+i <- 6
+for (i in 1:nrow(world)) {
+  
+  country.i.lyr <- world[i,]
+  country.i.id <- country.i.lyr$COUNTRY
+  country.i.gid <- country.i.lyr$GID_0
+  
+  #country.i.cont <- country.i.lyr$continent
+  #country.i.reg <- country.i.lyr$region.wb
+  
+  cat("Working on ", country.i.id, ": ", i, "out of", nrow(world), '\n')
+  
+  c.extent <- terra::ext(vect(country.i.lyr$geom))
+  country.border <- vect(country.i.lyr$geom)
+  
+  cat("Masking", '\n')
+  
+  mask.c.area.curr <- rast("Data/CurtisLayers/Raw_suitability_scores/curtis.forestry.current.ag.suitability.tif") %>% 
+    crop(., c.extent) %>%mask(., country.border)  
+  
+  mask.c.area.26 <- rast("Data/CurtisLayers/Raw_suitability_scores/curtis.forestry.2070.2099.rcp2p6.ag.suitability.tif") %>% 
+    crop(., c.extent) %>%mask(., country.border) 
+  
+  mask.c.area.85 <- rast("Data/CurtisLayers/Raw_suitability_scores/curtis.forestry.2070.2099.rcp8p5.ag.suitability.tif") %>% 
+    crop(., c.extent) %>%mask(., country.border) 
+    
+    cat("Differencing", '\n')
+    
+    diff.85 <- mask.c.area.85 - mask.c.area.curr
+    diff.26 <- mask.c.area.26 - mask.c.area.curr
+    
+    cat("Expansing", '\n')
+    
+    diff.85.ex <- expanse(diff.85, byValue = TRUE, unit = "ha")
+    diff.26.ex <- expanse(diff.26, byValue = TRUE, unit = "ha")
+    
+    if(nrow(diff.26.ex) == 0) {diff.26.ex <- data.frame(layer = "NO.FOREST", value = "NO.FOREST", area = "NO.FOREST", rcp = "rcp2p6")}
+    if(nrow(diff.85.ex) == 0) {diff.85.ex <- data.frame(layer = "NO.FOREST", value = "NO.FOREST", area = "NO.FOREST", rcp = "rcp8p5")}
+    if(nrow(diff.85.ex) != 0) {diff.85.ex$rcp <- "rcp8p5"}
+    if(nrow(diff.26.ex) != 0) {diff.26.ex$rcp <- "rcp2p6"}
+    
+    c.i.add <- rbind(diff.26.ex, diff.85.ex) %>% 
+      mutate(country = country.i.id, country.gid = country.i.gid,
+             change = case_when(value > 0 ~ "Increase", value < 0 ~ "Decrease", value == 0 ~ "No change",
+                                value == "NO.FOREST" ~ "NO.FOREST"))
+    
+    all.c.dat <- rbind(all.c.dat, c.i.add)       
+  }
+
+all.c.dat.sum <- all.c.dat %>% filter(area != "NO.FOREST") %>% 
+  group_by(rcp, country, country.gid, change) %>% summarise(area = sum(as.numeric(as.character(area))))
+
+write.csv(all.c.dat, "Data/CountryArea/all.country.change.area.2070.2099.raw.csv")
+write.csv(all.c.dat.sum, "Data/CountryArea/all.country.change.area.2070.2099.sum.csv")
+
 #### Country frontier area #####
 front.layers <- list.files("Data/Agri.Frontiers/", full.names = TRUE)
 timber.countries <- c("USA", "Russia", "China", "Brazil", "Canada")
@@ -222,6 +294,7 @@ for (i in 1:length(continent.ls)) {
 
 #write.csv(cont.lyr.dat, "Data/ContinentArea/ContinentSuitability.csv")
 cont.lyr.dat <- read.csv("Data/ContinentArea/ContinentSuitability.csv")
+
 
 
 
