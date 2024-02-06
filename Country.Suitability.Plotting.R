@@ -7,7 +7,8 @@ source("Functions.r")
 
 c.lyr.dat <- read.csv("Data/CountryArea/Timber.top5.suitability.csv")
 cont.lyr.dat <- read.csv("Data/ContinentArea/ContinentSuitability.csv")
-
+all.c.dat <- read.csv("Data/CountryArea/all.country.change.area.2070.2099.raw.csv")
+all.c.dat.sum <- read.csv("Data/CountryArea/all.country.change.area.2070.2099.sum.csv")
 
 ## make ordered
 c.lyr.dat <- c.lyr.dat %>%
@@ -203,6 +204,7 @@ c.rcp26.modhigh.area.plt <- ggplot(filter(ch.rcp26, time != "2010-2039"),
   xlab("Change in productive area (M ha)") +
   ylab("Country") +
   scale_fill_manual(values = c("#21918c", "#440154"), "Time Period") +
+  coord_cartesian(xlim = c(0, 50)) +
   theme_bw(base_size = 12) +
   theme(legend.title = element_text(face = "bold"))
 
@@ -219,8 +221,9 @@ c.rcp85.modhigh.area.plt <- ggplot(filter(ch.rcp85, time != "2010-2039"),
   xlab("Change in productive area (M ha)") +
   ylab("Country") +
   scale_fill_manual(values = c("#21918c", "#440154"), "Time Period") +
+  coord_cartesian(xlim = c(0, 50)) +
   theme_bw(base_size = 12) +
-  theme(legend.title = element_text(face = "bold"))
+  theme(legend.title = element_text(face = "bold"), axis.title.y = element_blank())
 
 ## modhigh perc
 c.rcp26.modhigh.perc.plt <- ggplot(filter(ch.rcp26, time != "2010-2039"), 
@@ -252,7 +255,7 @@ c.rcp85.modhigh.perc.plt <- ggplot(filter(ch.rcp85, time != "2010-2039"),
   ylab("Country") +
   scale_fill_manual(values = c("#21918c", "#440154"), "Time Period") +
   theme_bw(base_size = 12) +
-  theme(legend.title = element_text(face = "bold"))
+  theme(legend.title = element_text(face = "bold"), axis.title.y = element_blank())
 
 library(ggpubr)
 ## cult area
@@ -282,6 +285,40 @@ c.modhigh.perc.plt <- ggarrange(c.rcp26.modhigh.perc.plt, c.rcp85.modhigh.perc.p
 
 ggsave(path = "Outputs/Figures/Countries", c.modhigh.perc.plt, filename = "country.modhigh.perc.change.png",  bg = "white",
        device = "png", width = 30, height = 12, units = "cm")
+
+#### Plot crop suitability ####
+
+crop.rcp26.modhigh.area.plt <- ggplot(filter(top.5.global.crops.good.land.all.scenarios, Scenario == "RCP 2.6"), 
+                                   aes(area.change/1000000, Crop, fill = Time)) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 0.5, ymax = 1.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 2.5, ymax = 3.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 4.5, ymax = 5.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 6.5, ymax = 7.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 8.5, ymax = 9.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_col(aes(group = Time), position = position_dodge(width = 1), size = 1) +
+  xlab("Change in productive area (M ha)") +
+  ylab("Crop") +
+  scale_fill_manual(values = c("#21918c", "#440154"), "Time Period") +
+  coord_cartesian(xlim = c(0, 50)) +
+  theme_bw(base_size = 12) +
+  theme(legend.title = element_text(face = "bold"))
+
+crop.rcp85.modhigh.area.plt <- ggplot(filter(top.5.global.crops.good.land.all.scenarios, Scenario == "RCP 8.5"), 
+                                      aes(area.change/1000000, Crop, fill = Time)) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 0.5, ymax = 1.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 2.5, ymax = 3.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 4.5, ymax = 5.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 6.5, ymax = 7.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_rect(xmin = -Inf, xmax = Inf, ymin = 8.5, ymax = 9.5, colour = NA, fill = "grey75", alpha = .01) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_col(aes(group = Time), position = position_dodge(width = 1), size = 1) +
+  xlab("Change in productive area (M ha)") +
+  ylab("Crop") +
+  scale_fill_manual(values = c("#21918c", "#440154"), "Time Period") +
+  coord_cartesian(xlim = c(0, 50)) +
+  theme_bw(base_size = 12) +
+  theme(legend.title = element_text(face = "bold"), axis.title.y = element_blank())
 
 #### Final Figures ####
 empty <- ggplot() + theme_minimal()
@@ -321,6 +358,60 @@ c.cult.perc.area.plt2 <- c.cult.perc.area.plt +
 ggsave(path = "Outputs/Figures/Countries", c.cult.perc.area.plt2, 
        filename = "country.cult.perc.area.change.png",  bg = "white",
        device = "png", width = 25, height = 20, units = "cm")
+
+## country and crop
+country.crop.area.plt <- ggarrange(empty,
+                                  ggarrange(c.rcp26.modhigh.area.plt, c.rcp85.modhigh.area.plt,
+                                            crop.rcp26.modhigh.area.plt, crop.rcp85.modhigh.area.plt,
+                                            labels = c("A.", "B.", "C.", "D."),
+                                            nrow = 2, ncol = 2, common.legend = TRUE, legend = "bottom"),
+                                  nrow =2, heights = c(.05, .95))
+
+country.crop.area.plt2 <- country.crop.area.plt +  
+  annotation_custom(text_grob("RCP2.6",face = "bold", size = 12), 
+                    xmin = 0.3, xmax = 0.3, ymin = 0.97, ymax = 0.97)+
+  annotation_custom(text_grob("RCP8.5",face = "bold", size = 12), 
+                    xmin = 0.8, xmax = 0.8, ymin = 0.97, ymax = 0.97)
+
+ggsave(path = "Outputs/Figures/Countries", country.crop.area.plt2, 
+       filename = "country.crop.modhigh.area.change.png",  bg = "white",
+       device = "png", width = 25, height = 20, units = "cm")
+
+#### Plot all country x y #####
+all.c.wide.sum <- all.c.dat.sum %>% select(-X) %>% 
+  pivot_wider(id_cols = c("country", "country.gid", "rcp"), names_from = "change", values_from = "area") %>%
+  mutate(Increase = ifelse(is.na(Increase), 0, Increase),
+         `No change` = ifelse(is.na(`No change`), 0, `No change`),
+         Decrease = ifelse(is.na(Decrease), 0, Decrease),
+         tot = Increase + `No change` + Decrease,
+         inc.perc = Increase/tot *100,
+         dec.perc = Decrease/tot *100, 
+         world.forest.area = 1197895027,
+         perc.total.forestry = tot/world.forest.area *100) %>%
+  group_by(rcp) %>% mutate(total.increase = sum(Increase)) %>% ungroup() %>%
+  mutate(perc.total.inc = Increase/total.increase *100)
+
+ggplot(all.c.wide.sum, aes(tot, inc.perc)) +
+  geom_point() +
+  facet_wrap(~rcp) +
+  xlab("Total forestry (ha)") +
+  ylab("% of forestry area that is increasing suitability") + 
+  scale_x_log10()
+
+ggplot(all.c.wide.sum, aes(tot, dec.perc)) +
+  geom_point() +
+  facet_wrap(~rcp) +
+  xlab("Total forestry (ha)") +
+  ylab("% of forestry area that is increasing suitability") + 
+  scale_x_log10()
+
+ggplot(all.c.wide.sum, aes(perc.total.forestry, perc.total.inc)) +
+  geom_label(aes(label = country)) +
+  facet_wrap(~rcp) +
+  xlab("Total forestry (ha)") +
+  ylab("% of forestry area that is increasing suitability") +
+  geom_abline() +
+  scale_x_log10() + scale_y_log10()
 
 #### Plot continent suitability area ####
 

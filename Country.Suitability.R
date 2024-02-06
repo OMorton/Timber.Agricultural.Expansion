@@ -127,7 +127,67 @@ write.csv(diff.dat, "Data/CountryArea/Timber.top5.changes.classified.csv")
 diff.dat %>% group_by(rcp, country) %>% tally(area)
 diff.dat %>% group_by(rcp) %>% tally(area)
 
-#### All countries ####
+#### All countries suitablility ####
+layers <- list.files("Data/CurtisLayers/", full.names = TRUE)[1:14]
+
+world <- sf::st_read("Data/GADMworld/gadm_410-levels.gpkg", layer = "ADM_0")
+
+all.c.suit.dat <- data.frame()
+
+i <- 6
+for (i in 1:nrow(world)) {
+  
+  country.i.lyr <- world[i,]
+  country.i.id <- country.i.lyr$COUNTRY
+  country.i.gid <- country.i.lyr$GID_0
+  
+  #country.i.cont <- country.i.lyr$continent
+  #country.i.reg <- country.i.lyr$region.wb
+  
+  cat("Working on ", country.i.id, ": ", i, "out of", nrow(world), '\n')
+  
+  c.extent <- terra::ext(vect(country.i.lyr$geom))
+  country.border <- vect(country.i.lyr$geom)
+  
+  for (j in 1:length(layers)) {
+    lyr <- layers[j]
+    cat(lyr, '\n', j, "out of", length(layers), '\n')
+    
+    if (grepl(pattern = "current", lyr) == TRUE){time <- "Current"}
+    if (grepl(pattern = "2010", lyr) == TRUE){time <- "2010-2039"}
+    if (grepl(pattern = "2040", lyr) == TRUE){time <- "2040-2069"}
+    if (grepl(pattern = "2070", lyr) == TRUE){time <- "2070-2099"}
+    if (grepl(pattern = "rcp8p5", lyr) == TRUE){rcp <- "rcp8.5"}
+    if (grepl(pattern = "rcp2p6", lyr) == TRUE){rcp <- "rcp2.6"}
+    if (grepl(pattern = "current", lyr) == TRUE){rcp <- NA}
+
+  
+  cat("Masking", '\n')
+  
+  mask.c.area.curr <- rast(lyr) %>% 
+    crop(., c.extent) %>%mask(., country.border)  
+  
+  cat("Expansing", '\n')
+  
+  c.suit.ex <- expanse(mask.c.area.curr, byValue = TRUE, unit = "ha")
+
+  if(nrow(c.suit.ex) == 0) {c.suit.ex <- data.frame(layer = "NO.FOREST", value = "NO.FOREST", area = "NO.FOREST")}
+  
+  c.suit.i.add <- c.suit.ex %>% 
+    mutate(country = country.i.id, country.gid = country.i.gid, rcp = rcp, time = time,
+           suitability = case_when(value == 0 ~ "Unsuitable", value > 0 & value < 33 ~ "Marginal",
+                              value > 32 & value < 75 ~ "Moderately", value > 74 ~ "Highly",
+                              value == "NO.FOREST" ~ "NO.FOREST"))
+  
+  all.c.suit.dat <- rbind(all.c.suit.dat, c.suit.i.add)       
+  }
+  }
+
+
+
+write.csv(all.c.suit.dat, "Data/CountryArea/all.country.suitability.area.raw.csv")
+
+#### All countries change ####
 
 world <- sf::st_read("Data/GADMworld/gadm_410-levels.gpkg", layer = "ADM_0")
 world.l <- sf::st_layers("Data/GADMworld/gadm_410-levels.gpkg")
@@ -246,6 +306,8 @@ write.csv(front.dat, "Data/CountryArea/Timber.top5.frontier.area.raw.csv")
 
 front.dat.sum <- front.dat %>% group_by(rcp,country, time) %>% summarise(area = sum(area))
 write.csv(front.dat.sum, "Data/CountryArea/Timber.top5.frontier.area.sum.csv")
+
+
 
 #### Continent level ####
 
