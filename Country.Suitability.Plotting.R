@@ -93,7 +93,7 @@ for (i in 1:10) {
 
 
 ## Alternate country level plot
-ch.rcp26 <- c.rcp26 %>% select(-X.1, -X) %>% pivot_wider(names_from = "suitability", values_from = "area.ha") %>%
+ch.rcp26 <- c.rcp26 %>% select( -X) %>% pivot_wider(names_from = "suitability", values_from = "area.ha") %>%
   mutate(cult.area.ha = Marginal + Moderately + Highly,
          modhigh.area.ha = Moderately + Highly) %>%
   select(-c(Unsuitable, Marginal, Moderately, Highly)) %>%
@@ -109,7 +109,7 @@ ch.rcp26 <- c.rcp26 %>% select(-X.1, -X) %>% pivot_wider(names_from = "suitabili
          ch.modhigh.area.perc = ch.modhigh.area.ha/hist.modhigh.area.ha *100) %>%
   filter(country %in% c("USA", "Russia", "China", "Brazil", "Canada"))
 
-ch.rcp85 <- c.rcp85 %>% select(-X.1, -X) %>% pivot_wider(names_from = "suitability", values_from = "area.ha") %>%
+ch.rcp85 <- c.rcp85 %>% select(-X) %>% pivot_wider(names_from = "suitability", values_from = "area.ha") %>%
   mutate(cult.area.ha = Marginal + Moderately + Highly,
          modhigh.area.ha = Moderately + Highly) %>%
   select(-c(Unsuitable, Marginal, Moderately, Highly)) %>%
@@ -363,7 +363,7 @@ ggsave(path = "Outputs/Figures/Countries", c.cult.perc.area.plt2,
 country.crop.area.plt <- ggarrange(empty,
                                   ggarrange(c.rcp26.modhigh.area.plt, c.rcp85.modhigh.area.plt,
                                             crop.rcp26.modhigh.area.plt, crop.rcp85.modhigh.area.plt,
-                                            labels = c("A.", "B.", "C.", "D."),
+                                            labels = c("a", "b", "c", "d"),
                                             nrow = 2, ncol = 2, common.legend = TRUE, legend = "bottom"),
                                   nrow =2, heights = c(.05, .95))
 
@@ -375,7 +375,7 @@ country.crop.area.plt2 <- country.crop.area.plt +
 
 ggsave(path = "Outputs/Figures/Countries", country.crop.area.plt2, 
        filename = "country.crop.modhigh.area.change.png",  bg = "white",
-       device = "png", width = 25, height = 20, units = "cm")
+       device = "png", width = 20, height = 15, units = "cm")
 
 #### Plot all country x y #####
 all.c.wide.sum <- all.c.dat.sum %>% select(-X) %>% 

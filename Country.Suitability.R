@@ -41,20 +41,22 @@ for (i in 1:length(timber.countries)) {
       mask.c.area <- rast(lyr) %>% crop(., c.extent) %>%mask(., country.border)  
                           
       tot <- mask.c.area %>% expanse(unit = "ha")
-      Unsuitable <- mask.c.area %>% ifel(. != 1, NA, .) %>% expanse(unit = "ha")
-      Marginal <- mask.c.area %>% ifel(. != 2, NA, .) %>% expanse(unit = "ha")
-      Moderately <- mask.c.area %>% ifel(. != 3, NA, .) %>% expanse(unit = "ha")
-      Highly <- mask.c.area %>% ifel(. != 4, NA, .) %>% expanse(unit = "ha")
+      mask.ex <- mask.c.area %>% expanse(byValue = TRUE, unit = "ha")
                                               
-      c.lyr.add <- data.frame(suitability = c("Unsuitable", "Marginal", "Moderately", "Highly"),
-                            area.ha = c(Unsuitable$area, Marginal$area, Moderately$area, Highly$area),
-                            total.ha = tot$area, RCP = rcp, time = time, land.cover, country = country.i)
+      c.lyr.add <- mask.ex %>% mutate(total.ha = tot$area, RCP = rcp, time = time, land.cover, country = country.i)
       
       c.lyr.dat <- rbind(c.lyr.dat, c.lyr.add)                    
   }
   write.csv(c.lyr.dat, paste0("Data/CountryArea/temp.out.", i, ".csv"))
   
 }
+c.lyr.dat <- c.lyr.dat %>% mutate(suitability = case_when(value == 1 ~ "Unsuitable",
+                                                          value == 2 ~ "Marginal",
+                                                          value == 3 ~ "Moderately",
+                                                          value == 4 ~ "Highly")) %>%
+  rename("area.ha" = "area") %>% 
+  select(-c(layer, value))
+
 #write.csv(c.lyr.dat, "Data/CountryArea/Timber.top5.suitability.csv")
 c.lyr.dat <- read.csv("Data/CountryArea/Timber.top5.suitability.csv")
 
