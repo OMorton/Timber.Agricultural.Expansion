@@ -6,6 +6,7 @@ options(scipen = 999)
 
 source("Functions.r")
 
+#### Global suitability ####
 ## get list of layers
 layers <- list.files("Data/CurtisLayers/", full.names = TRUE)[1:14]
 ## storage
@@ -49,6 +50,36 @@ lyr.dat <- read.csv("Data/SuitableArea/SuitableArea.Summary.csv")
 lyr.dat <- lyr.dat %>%
   mutate(time = ordered(time, levels = c("Current", "2010-2039", "2040-2069","2070-2099")),
          suitability = ordered(suitability, levels = c("Unsuitable", "Marginal", "Moderately", "Highly")))
+#### Global gain loss ####
+layers <- list.files("Data/CurtisLayers/good.land", full.names = TRUE)[1:12]
+all.gain.loss.dat <- data.frame()
+for (j in 1:length(layers)) {
+  lyr <- layers[j]
+  cat(lyr, '\n', j, "out of", length(layers), '\n')
+  
+  if (grepl(pattern = "2010", lyr) == TRUE){time <- "2010-2039"}
+  if (grepl(pattern = "2040", lyr) == TRUE){time <- "2040-2069"}
+  if (grepl(pattern = "2070", lyr) == TRUE){time <- "2070-2099"}
+  if (grepl(pattern = "rcp8p5", lyr) == TRUE){rcp <- "rcp8.5"}
+  if (grepl(pattern = "rcp2p6", lyr) == TRUE){rcp <- "rcp2.6"}
+  if (grepl(pattern = "no.forestry", layers[j]) == TRUE){land.cover <- "no.forestry"} else {
+    land.cover <- "forestry"}
+  
+  
+  cat("Expansing", '\n')
+  mask.lyr <- rast(lyr)
+  gain.loss.ex <- expanse(mask.lyr, byValue = TRUE, unit = "ha")
+  
+  gain.loss.i.add <- gain.loss.ex %>% 
+    mutate(rcp = rcp, time = time, land.cover = land.cover,
+           suitability = case_when(value == 1 ~ "Loss", 
+                                   value == 2 ~ "Persist",
+                                   value == 3 ~ "Gain",
+                                   value == "NO.FOREST" ~ "NO.FOREST"))
+  
+  all.gain.loss.dat <- rbind(all.gain.loss.dat, gain.loss.i.add)       
+}
+write.csv(all.gain.loss.dat, "Data/CountryArea/global.gain.loss.raw.csv")
 #### Plot forestry suitability area ####
 rcp26 <- lyr.dat %>% filter(RCP %in% c("rcp2.6",NA), land.cover == "Forestry")
 rcp85 <- lyr.dat %>% filter(RCP %in% c("rcp8.5",NA), land.cover == "Forestry")
