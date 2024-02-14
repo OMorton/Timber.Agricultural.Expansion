@@ -188,6 +188,112 @@ for (i in 1:nrow(world)) {
 
 
 write.csv(all.c.suit.dat, "Data/CountryArea/all.country.suitability.area.raw.csv")
+#### All countries productive gain/loss/persist ####
+
+
+all.crops.suitability.current.forest <-rast("Data/CurtisLayers/curtis.forestry.current.ag.suitability.classified 2.tif")
+all.crops.suitability.current.noforest <-rast("Data/CurtisLayers/curtis.no.forestry.current.ag.suitability.classified 2.tif")
+
+all.crops.good.current.forest<- clamp(all.crops.suitability.current.forest, lower = 3, values = F, 
+                                    filename = "Data/CurtisLayers/good.land/steps/all.crops.good.land.forest.current.tif", overwrite = T)
+all.crops.good.current.noforest<- clamp(all.crops.suitability.current.noforest, lower = 3, values = F, 
+                                    filename = "Data/CurtisLayers/good.land/steps/all.crops.good.land.no.forestry.current.tif", overwrite = T)
+
+layers <- list.files("Data/CurtisLayers/", full.names = TRUE)[c(1:6,8:13)]
+for (i in 1:length(layers)) {
+  lyr <- rast(layers[i])
+  cat(layers[i], '\n', i, "out of", length(layers), '\n')
+  
+  if (grepl(pattern = "2010", layers[i]) == TRUE){time <- "2010.2039"}
+  if (grepl(pattern = "2040", layers[i]) == TRUE){time <- "2040.2069"}
+  if (grepl(pattern = "2070", layers[i]) == TRUE){time <- "2070.2099"}
+  if (grepl(pattern = "rcp8p5", layers[i]) == TRUE){rcp <- "rcp8p5"}
+  if (grepl(pattern = "rcp2p6", layers[i]) == TRUE){rcp <- "rcp2p6"}
+  if (grepl(pattern = "no.forestry", layers[i]) == TRUE){land.cover <- "no.forestry"} else {
+    land.cover <- "forestry"}
+  
+  if (land.cover == "forestry") {current <- all.crops.good.current.forest} else {
+    current <- all.crops.good.current.noforest}
+  
+  lyr.good <- clamp(lyr, lower = 3, values = F,
+                                                filename = paste0("Data/CurtisLayers/good.land/steps/all.crops.good.land.",time, ".", rcp, ".", land.cover, ".tif"), overwrite = T)
+  # get areas good.land in the future but not in the present
+  lyr.newly.good <- mask(lyr.good, current, inverse = T,
+                                                    filename = paste0("Data/CurtisLayers/good.land/steps/all.crops.newly.good.land.",time, ".", rcp, ".", land.cover, ".tif"), overwrite = T)
+  # get areas good.land in the present but not the future
+  lyr.not.good <-  mask(current,lyr.good, inverse = T, 
+                                                   filename = paste0("Data/CurtisLayers/good.land/steps/all.crops.not.good.land.",time, ".", rcp, ".", land.cover, ".tif"), overwrite = T)
+  # get areas that remain good.land in the future
+  lyr.remain.good <- mask(lyr.good,current, 
+                                         filename = paste0("Data/CurtisLayers/good.land/steps/all.crops.remain.good.land.",time, ".", rcp, ".", land.cover, ".tif"), overwrite = T)
+  
+  ## change to values 1 = loss, 2 = persist, 3 = gain
+  lyr.not.good.2 <- subst(lyr.not.good, c(1:4), 1)
+  lyr.remain.good.2 <- subst(lyr.remain.good, c(1:4), 2)
+  lyr.newly.good.2 <- subst(lyr.newly.good, c(1:4), 3)
+  
+  ## put together ##
+  all.crops.land.changes <- max(lyr.not.good.2,lyr.remain.good.2,lyr.newly.good.2, na.rm = T) 
+  
+  writeRaster(all.crops.land.changes, 
+              filename = paste0("Data/CurtisLayers/good.land/gain.loss.", time, ".", rcp, ".", land.cover, ".tif"), overwrite = T) 
+}
+
+
+world <- sf::st_read("Data/GADMworld/gadm_410-levels.gpkg", layer = "ADM_0")
+
+all.c.gain.loss.dat <- data.frame()
+layers <- list.files("Data/CurtisLayers/good.land", full.names = TRUE)[1:12]
+ i <- 2
+j <- 2
+for (i in 1:nrow(world)) {
+  
+  country.i.lyr <- world[i,]
+  country.i.id <- country.i.lyr$COUNTRY
+  country.i.gid <- country.i.lyr$GID_0
+  
+  cat("Working on ", country.i.id, ": ", i, "out of", nrow(world), '\n')
+  
+  c.extent <- terra::ext(vect(country.i.lyr$geom))
+  country.border <- vect(country.i.lyr$geom)
+  
+  for (j in 1:length(layers)) {
+    lyr <- layers[j]
+    cat(lyr, '\n', j, "out of", length(layers), '\n')
+    
+    if (grepl(pattern = "2010", lyr) == TRUE){time <- "2010-2039"}
+    if (grepl(pattern = "2040", lyr) == TRUE){time <- "2040-2069"}
+    if (grepl(pattern = "2070", lyr) == TRUE){time <- "2070-2099"}
+    if (grepl(pattern = "rcp8p5", lyr) == TRUE){rcp <- "rcp8.5"}
+    if (grepl(pattern = "rcp2p6", lyr) == TRUE){rcp <- "rcp2.6"}
+    if (grepl(pattern = "no.forestry", layers[j]) == TRUE){land.cover <- "no.forestry"} else {
+      land.cover <- "forestry"}
+    
+    cat("Masking", '\n')
+    
+    mask.c.lyr<- rast(lyr) %>% 
+      crop(., c.extent) %>% mask(., country.border) 
+    
+    cat("Expansing", '\n')
+    
+    c.gain.loss.ex <- expanse(mask.c.lyr, byValue = TRUE, unit = "ha")
+    
+    if(nrow(c.gain.loss.ex) == 0) {c.suit.ex <- data.frame(layer = "NO.FOREST", value = "NO.FOREST", area = "NO.FOREST")}
+    
+    c.gain.loss.i.add <- c.gain.loss.ex %>% 
+      mutate(country = country.i.id, country.gid = country.i.gid, 
+             rcp = rcp, time = time, land.cover = land.cover,
+             suitability = case_when(value == 1 ~ "Loss", 
+                                     value == 2 ~ "Persist",
+                                     value == 3 ~ "Gain",
+                                     value == "NO.FOREST" ~ "NO.FOREST"))
+    
+    all.c.gain.loss.dat <- rbind(all.c.gain.loss.dat, c.gain.loss.i.add)       
+  }
+}
+
+write.csv(all.c.gain.loss.dat, "Data/CountryArea/all.country.gain.loss.raw.csv")
+
 
 #### All countries change ####
 
