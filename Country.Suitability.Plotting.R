@@ -231,7 +231,7 @@ top4.ordered.plot <- ggplot(topprod, aes(order2, rel.gain, colour = rcp)) +
                      labels = c("RCP2.6", "RCP8.5")) +
   scale_fill_manual(values = c("#21918c", "#440154"), "RCP", 
                      labels = c("RCP2.6", "RCP8.5")) +
-  ylab("Relative productivity \n gains in forestry") +
+  ylab("Productive forestry gains / \n forestry land area") +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, face = c("bold", rep("plain", 10)),
                                    colour = "black"),
@@ -239,16 +239,18 @@ top4.ordered.plot <- ggplot(topprod, aes(order2, rel.gain, colour = rcp)) +
         legend.title = element_text(face = "bold"))
 
 ggsave(path = "Outputs/Figures/Countries", top10.ordered.plot, 
-       filename = "country.gainloss.top10.ratio.png",  bg = "white",
+       filename = "country.gainloss.top4.ratio.png",  bg = "white",
        device = "png", width = 15, height = 10, units = "cm")
 
 #### Travel time and distance
 #### Travel + distance ####
 
 tt.plt <- ggplot(tt.dat, aes(q50/60, land.cover, colour = rcp, group = rcp)) +
-  geom_point(position = position_dodge(width = 0.7), size = 3) +
+  geom_point(position = position_dodge(width = 0.7), size = 4) +
   geom_errorbarh(aes(xmin = q5/60, xmax = q95/60), position = position_dodge(width = 0.7),
                  height = 0, linewidth = 1) +
+  geom_errorbarh(aes(xmin = q25/60, xmax = q75/60), position = position_dodge(width = 0.7),
+                 height = 0, linewidth = 2) +
   scale_y_discrete(limits = c("non.forestry", "forestry"), 
                    labels = c("Non forestry", "Forestry")) +
   scale_color_manual(values = c("#21918c", "#440154"), "RCP", 
@@ -264,6 +266,8 @@ d.plt <- ggplot(d.dat, aes(q50/1000, land.cover, colour = rcp, group = rcp)) +
   geom_point(position = position_dodge(width = 0.7), size = 3) +
   geom_errorbarh(aes(xmin = q5/1000, xmax = q95/1000), position = position_dodge(width = 0.7),
                  height = 0, linewidth = 1) +
+  geom_errorbarh(aes(xmin = q25/1000, xmax = q75/1000), position = position_dodge(width = 0.7),
+                 height = 0, linewidth = 2) +
   scale_y_discrete(limits = c("non.forestry", "forestry"), 
                    labels = c("Non forestry", "Forestry")) +
   scale_color_manual(values = c("#21918c", "#440154"), "RCP", 
@@ -274,7 +278,7 @@ d.plt <- ggplot(d.dat, aes(q50/1000, land.cover, colour = rcp, group = rcp)) +
   theme_bw() +
   theme(legend.position = "bottom", legend.title = element_text(face = "bold"))
 
-tt.d.plt <- ggarrange(top10.ordered.plot, 
+tt.d.plt <- ggarrange(top4.ordered.plot, 
                       ggarrange(tt.plt, d.plt, labels = c("b", "c"), nrow = 1,
                                 ncol = 2, common.legend = TRUE, legend = "bottom"),
                       legend = "none", labels = c("a", ""), ncol = 1, nrow = 2, 
@@ -285,10 +289,9 @@ ggsave(path = "Outputs/Figures/Countries", tt.d.plt,
        device = "png", width = 20, height = 18, units = "cm")
 
 
-tt.d.plt <- ggarrange(top10.ordered.plot, tt.plt, d.plt, labels = c("a", "b", "c"), 
-                      nrow = 3, ncol = 1, common.legend = TRUE, legend = "bottom",
-                      align = "v")
+tt.d.plt <- ggarrange(top4.ordered.plot, tt.plt, d.plt, labels = c("a", "b", "c"), 
+                      nrow = 3, ncol = 1, common.legend = TRUE, legend = "bottom")
 
 ggsave(path = "Outputs/Figures/Countries", tt.d.plt, 
        filename = "country.gainloss.ratio.tt.d.tall.png",  bg = "white",
-       device = "png", width = 10, height = 18, units = "cm")
+       device = "png", width = 14, height = 22, units = "cm")

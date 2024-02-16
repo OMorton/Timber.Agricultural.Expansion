@@ -5,6 +5,7 @@ library(rnaturalearth)
 options(scipen = 999)
 
 source("Functions.r")
+world <- sf::st_read("Data/GADMworld/gadm_410-levels.gpkg", layer = "ADM_0")
 
 #### Country classified area ####
 ## Get country outlines

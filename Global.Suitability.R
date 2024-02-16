@@ -123,7 +123,7 @@ for (j in 1:length(layers)) {
 write.csv(all.gain.loss.dat.mtop4, "Data/CountryArea/global.gain.loss.raw.minus.top4.csv")
 
 #### Travel time summary ####
-tt.layers <- list.files("Data/TravelTime", full.names = TRUE)
+tt.layers <- list.files("Data/TravelTime", full.names = TRUE)[c(3,4,7,8)]
 tt.dat <- data.frame()
 for (i in 1:length(tt.layers)) {
   lyr <- tt.layers[i]
@@ -167,7 +167,7 @@ for (i in 1:length(tt.layers)) {
 #write.csv(tt.dat, "Data/TravelTime/travel.time.sum.csv")
 
 #### Distance to agriculture ####
-d.layers <- list.files("Data/Distance", full.names = TRUE)
+d.layers <- list.files("Data/Distance", full.names = TRUE)[c(4,5,8, 9)]
 d.dat <- data.frame()
 for (i in 1:length(d.layers)) {
   lyr <- d.layers[i]
