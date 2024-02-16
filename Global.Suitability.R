@@ -80,6 +80,135 @@ for (j in 1:length(layers)) {
   all.gain.loss.dat <- rbind(all.gain.loss.dat, gain.loss.i.add)       
 }
 write.csv(all.gain.loss.dat, "Data/CountryArea/global.gain.loss.raw.csv")
+
+#### Global gain loss (minus top 4 timber producers) ####
+layers <- list.files("Data/CurtisLayers/good.land", full.names = TRUE)[1:12]
+world <- sf::st_read("Data/GADMworld/gadm_410-levels.gpkg", layer = "ADM_0")
+
+USA <- world %>% filter(COUNTRY == "United States")
+RUS <- world %>% filter(COUNTRY == "Russia")
+CHN <- world %>% filter(COUNTRY == "China")
+CAN <- world %>% filter(COUNTRY == "Canada")
+
+all.gain.loss.dat.mtop4 <- data.frame()
+
+for (j in 1:length(layers)) {
+  lyr <- layers[j]
+  cat(lyr, '\n', j, "out of", length(layers), '\n')
+  
+  if (grepl(pattern = "2010", lyr) == TRUE){time <- "2010-2039"}
+  if (grepl(pattern = "2040", lyr) == TRUE){time <- "2040-2069"}
+  if (grepl(pattern = "2070", lyr) == TRUE){time <- "2070-2099"}
+  if (grepl(pattern = "rcp8p5", lyr) == TRUE){rcp <- "rcp8.5"}
+  if (grepl(pattern = "rcp2p6", lyr) == TRUE){rcp <- "rcp2.6"}
+  if (grepl(pattern = "no.forestry", layers[j]) == TRUE){land.cover <- "no.forestry"} else {
+    land.cover <- "forestry"}
+  cat("Expansing", '\n')
+  mask.lyr <- rast(lyr) %>% mask(USA, inverse = TRUE) %>% 
+    mask(RUS, inverse = TRUE) %>% 
+    mask(CAN, inverse = TRUE) %>%
+    mask(CHN, inverse = TRUE)
+  gain.loss.ex.mtop4 <- expanse(mask.lyr, byValue = TRUE, unit = "ha")
+  
+  gain.loss.i.add.mtop4 <- gain.loss.ex.mtop4 %>% 
+    mutate(rcp = rcp, time = time, land.cover = land.cover,
+           suitability = case_when(value == 1 ~ "Loss", 
+                                   value == 2 ~ "Persist",
+                                   value == 3 ~ "Gain",
+                                   value == "NO.FOREST" ~ "NO.FOREST"))
+  
+  all.gain.loss.dat.mtop4 <- rbind(all.gain.loss.dat.mtop4, gain.loss.i.add.mtop4)       
+}
+
+write.csv(all.gain.loss.dat.mtop4, "Data/CountryArea/global.gain.loss.raw.minus.top4.csv")
+
+#### Travel time summary ####
+tt.layers <- list.files("Data/TravelTime", full.names = TRUE)
+tt.dat <- data.frame()
+for (i in 1:length(tt.layers)) {
+  lyr <- tt.layers[i]
+  cat(lyr, '\n', i, "out of", length(tt.layers), '\n')
+  if (grepl(pattern = "2010", lyr) == TRUE){time <- "2010-2039"}
+  if (grepl(pattern = "2040", lyr) == TRUE){time <- "2040-2069"}
+  if (grepl(pattern = "2070", lyr) == TRUE){time <- "2070-2099"}
+  if (grepl(pattern = "rcp8p5", lyr) == TRUE){rcp <- "rcp8.5"}
+  if (grepl(pattern = "rcp2p6", lyr) == TRUE){rcp <- "rcp2.6"}
+  if (grepl(pattern = "non.forestry", lyr) == TRUE){land.cover <- "non.forestry"} else {
+    land.cover <- "forestry"}
+  tt.ex <- rast(lyr) %>% expanse(byValue = TRUE, unit = "ha") %>%
+    mutate(rcp = rcp, time = time, land.cover = land.cover)
+  tt.mean <- fastmean(tt.ex)
+  tt.sd <- fastSD(tt.ex)
+  
+  ## quantile to find
+  q5 <- 0.05
+  q25 <- 0.25
+  q50 <- 0.5
+  q75 <- 0.75
+  q95 <- 0.95
+  tt.ex$cumfreq <- cumsum(tt.ex$area)/sum(tt.ex$area)
+  q5.lyr <- tt.ex$value[tt.ex$cumfreq >= q5][1]
+  q50.lyr <- tt.ex$value[tt.ex$cumfreq >= q50][1]
+  q95.lyr <- tt.ex$value[tt.ex$cumfreq >= q95][1]
+  q25.lyr <- tt.ex$value[tt.ex$cumfreq >= q25][1]
+  q75.lyr <- tt.ex$value[tt.ex$cumfreq >= q75][1]
+  
+  tt.add <- data.frame(rcp = rcp, time = time, land.cover = land.cover,
+                       mean = tt.mean, sd = tt.sd,
+                       q5 = q5.lyr, q50 = q50.lyr, q95 = q95.lyr,
+                       q25 = q25.lyr, q75 = q75.lyr)
+  
+  tt.dat <- rbind(tt.dat, tt.add)
+  
+  write.csv(tt.ex, paste0("Data/TravelTime/", land.cover,
+                          ".", time, ".", rcp, "raw.csv"))
+}
+
+#write.csv(tt.dat, "Data/TravelTime/travel.time.sum.csv")
+
+#### Distance to agriculture ####
+d.layers <- list.files("Data/Distance", full.names = TRUE)
+d.dat <- data.frame()
+for (i in 1:length(d.layers)) {
+  lyr <- d.layers[i]
+  cat(lyr, '\n', i, "out of", length(d.layers), '\n')
+  if (grepl(pattern = "2010", lyr) == TRUE){time <- "2010-2039"}
+  if (grepl(pattern = "2040", lyr) == TRUE){time <- "2040-2069"}
+  if (grepl(pattern = "2070", lyr) == TRUE){time <- "2070-2099"}
+  if (grepl(pattern = "rcp8p5", lyr) == TRUE){rcp <- "rcp8.5"}
+  if (grepl(pattern = "rcp2p6", lyr) == TRUE){rcp <- "rcp2.6"}
+  if (grepl(pattern = "non.forestry", lyr) == TRUE){land.cover <- "non.forestry"} else {
+    land.cover <- "forestry"}
+  d.ex <- rast(lyr) %>% expanse(byValue = TRUE, unit = "ha") %>%
+    mutate(rcp = rcp, time = time, land.cover = land.cover)
+  d.mean <- fastmean(d.ex)
+  d.sd <- fastSD(d.ex)
+  
+  ## quantile to find
+  q5 <- 0.05
+  q50 <- 0.5
+  q95 <- 0.95
+  q75 <- 0.75
+  q95 <- 0.95
+  d.ex$cumfreq <- cumsum(d.ex$area)/sum(d.ex$area)
+  q5.lyr <- d.ex$value[d.ex$cumfreq >= q5][1]
+  q50.lyr <- d.ex$value[d.ex$cumfreq >= q50][1]
+  q95.lyr <- d.ex$value[d.ex$cumfreq >= q95][1]
+  q25.lyr <- d.ex$value[d.ex$cumfreq >= q25][1]
+  q75.lyr <- d.ex$value[d.ex$cumfreq >= q75][1]
+  
+  d.add <- data.frame(rcp = rcp, time = time, land.cover = land.cover,
+                      mean = d.mean, sd = d.sd, 
+                      q5 = q5.lyr, q50 = q50.lyr, q95 = q95.lyr,
+                      q25 = q25.lyr, q75 = q75.lyr)
+  
+  d.dat <- rbind(d.dat, d.add)
+  
+  write.csv(d.ex, paste0("Data/Distance/", land.cover,
+                         ".", time, ".", rcp, "raw.csv"))
+}
+write.csv(d.dat, "Data/Distance/distance.sum.csv")
+
 #### Plot forestry suitability area ####
 rcp26 <- lyr.dat %>% filter(RCP %in% c("rcp2.6",NA), land.cover == "Forestry")
 rcp85 <- lyr.dat %>% filter(RCP %in% c("rcp8.5",NA), land.cover == "Forestry")
