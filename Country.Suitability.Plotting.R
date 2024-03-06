@@ -13,11 +13,17 @@ all.c.dat.sum <- read.csv("Data/CountryArea/all.country.change.area.2070.2099.su
 all.c.gain.loss.dat <- read.csv("Data/CountryArea/all.country.gain.loss.raw.csv")
 tt.dat <- read.csv("Data/TravelTime/travel.time.sum.csv")
 d.dat <- read.csv("Data/Distance/distance.sum.csv")
+load("Data/CountryCrop/top.countries.5.top.crops.gains.losses.df.RData")
+load("Data/CountryCrop/five.crops.global.productive.land.change.df.RData")
 
 country.forest.area <- all.c.dat.sum %>% 
   group_by(country, rcp) %>% summarise(tot.forestry.area = sum(area)) %>%
  filter(rcp == "rcp2p6") %>% select(-rcp)
-
+top.countries.5.top.crop.df <- top.countries.5.top.crop.df %>%
+  mutate(crop = factor(crop, levels = c("Potato", "Soy", "Wheat", "Maize", "Rice")),
+         net.area.gain.mha = (area.gained - area.loss)/1000000)
+five.crops.global.productive.land.change.df <- five.crops.global.productive.land.change.df %>%
+  mutate(crop = factor(crop, levels = c("Potato", "Soy", "Wheat", "Maize", "Rice")))
 ## make ordered
 c.lyr.dat <- c.lyr.dat %>%
   mutate(time = ordered(time, levels = c("Current", "2010-2039", "2040-2069","2070-2099"))) %>%
@@ -222,7 +228,7 @@ top4.ordered.plot <- ggplot(topprod, aes(order2, rel.gain, colour = rcp)) +
   geom_point(data = glob.sum, aes(x = 0, y = rel.gain, fill = rcp),
              position = position_dodge(width = .7), size = 5, shape = 21, colour = "black") +
   geom_point(data = glob.mtop4.sum, aes(x = 5, y = rel.gain, fill = rcp),
-             position = position_dodge(width = .7), size = 5, shape = 21, colour = "black") +
+             position = position_dodge(width = .7), size = 3) +
   geom_hline(yintercept = 1, linetype = "dashed") +
   coord_cartesian(xlim = c(-0.5, 5.5), ylim = c(0, 7), expand = FALSE) +
   scale_x_continuous(breaks = c(0:5), 
@@ -231,8 +237,8 @@ top4.ordered.plot <- ggplot(topprod, aes(order2, rel.gain, colour = rcp)) +
                      labels = c("RCP2.6", "RCP8.5")) +
   scale_fill_manual(values = c("#21918c", "#440154"), "RCP", 
                      labels = c("RCP2.6", "RCP8.5")) +
-  ylab("Productive forestry gains / \n forestry land area") +
-  theme_bw() +
+  ylab("Productive frontier in  \n forestry : Land surface area ratio") +
+  theme_bw(base_size = 11.5) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, face = c("bold", rep("plain", 10)),
                                    colour = "black"),
         legend.position = "bottom", axis.title.x = element_blank(),
@@ -242,10 +248,9 @@ ggsave(path = "Outputs/Figures/Countries", top10.ordered.plot,
        filename = "country.gainloss.top4.ratio.png",  bg = "white",
        device = "png", width = 15, height = 10, units = "cm")
 
-#### Travel time and distance
 #### Travel + distance ####
 
-tt.plt <- ggplot(tt.dat, aes(q50/60, land.cover, colour = rcp, group = rcp)) +
+tt.plt <- ggplot(tt.dat, aes(mean/60, land.cover, colour = rcp, group = rcp)) +
   geom_point(position = position_dodge(width = 0.7), size = 4) +
   geom_errorbarh(aes(xmin = q5/60, xmax = q95/60), position = position_dodge(width = 0.7),
                  height = 0, linewidth = 1) +
@@ -256,13 +261,13 @@ tt.plt <- ggplot(tt.dat, aes(q50/60, land.cover, colour = rcp, group = rcp)) +
   scale_color_manual(values = c("#21918c", "#440154"), "RCP", 
                      labels = c("RCP2.6", "RCP8.5")) +
   xlab("Travel time to population centre (hours)") +
-  ylab("Productivity frontier") +
+  ylab("Productive frontier") +
   #scale_x_log10() +
-  theme_bw() +
+  theme_bw(base_size = 11.5) +
   theme(legend.position = "bottom", legend.title = element_text(face = "bold"))
   
 
-d.plt <- ggplot(d.dat, aes(q50/1000, land.cover, colour = rcp, group = rcp)) +
+d.plt <- ggplot(d.dat, aes(mean/1000, land.cover, colour = rcp, group = rcp)) +
   geom_point(position = position_dodge(width = 0.7), size = 3) +
   geom_errorbarh(aes(xmin = q5/1000, xmax = q95/1000), position = position_dodge(width = 0.7),
                  height = 0, linewidth = 1) +
@@ -273,20 +278,20 @@ d.plt <- ggplot(d.dat, aes(q50/1000, land.cover, colour = rcp, group = rcp)) +
   scale_color_manual(values = c("#21918c", "#440154"), "RCP", 
                      labels = c("RCP2.6", "RCP8.5")) +
   xlab("Distance to current agriculture (km)") +
-  ylab("Productivity frontier") +
+  ylab("Productive frontier") +
   #scale_x_log10() +
-  theme_bw() +
+  theme_bw(base_size = 11.5) +
   theme(legend.position = "bottom", legend.title = element_text(face = "bold"))
 
 tt.d.plt <- ggarrange(top4.ordered.plot, 
                       ggarrange(tt.plt, d.plt, labels = c("b", "c"), nrow = 1,
                                 ncol = 2, common.legend = TRUE, legend = "bottom"),
                       legend = "none", labels = c("a", ""), ncol = 1, nrow = 2, 
-                      heights = c(1.5, 1))
+                      heights = c(1, 1))
 
 ggsave(path = "Outputs/Figures/Countries", tt.d.plt, 
        filename = "country.gainloss.ratio.tt.d.png",  bg = "white",
-       device = "png", width = 20, height = 18, units = "cm")
+       device = "png", width = 20, height = 16, units = "cm")
 
 
 tt.d.plt <- ggarrange(top4.ordered.plot, tt.plt, d.plt, labels = c("a", "b", "c"), 
