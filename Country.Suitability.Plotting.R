@@ -165,6 +165,19 @@ ggsave(path = "Outputs/Figures/CountryCrop", top4.arr.plt.freescales, filename =
 forestry.area <- rast("Data/CurtisLayers/curtis.forestry.2010.2039.rcp2p6.ag.suitability.classified 3.tif") %>%
   expanse(unit = "ha") ## 1,197,895,027
 
+world <- sf::st_read("Data/GADMworld/gadm_410-levels.gpkg", layer = "ADM_0")
+USA <- world %>% filter(COUNTRY == "United States")
+RUS <- world %>% filter(COUNTRY == "Russia")
+CHN <- world %>% filter(COUNTRY == "China")
+CAN <- world %>% filter(COUNTRY == "Canada")
+
+forestry.area.mtop4 <- rast("Data/CurtisLayers/curtis.forestry.2010.2039.rcp2p6.ag.suitability.classified 3.tif") %>% 
+  mask(USA, inverse = TRUE) %>% 
+  mask(RUS, inverse = TRUE) %>% 
+  mask(CAN, inverse = TRUE) %>%
+  mask(CHN, inverse = TRUE) %>%
+  expanse(unit = "ha") ## 423527697
+
 zabel.lyr <- rast("Data/Zabel/overall_suitability_subset_1to17.bil")
 total.area.z <-  expanse(zabel.lyr, unit = "ha") ## 12,724,713,608
 
@@ -184,7 +197,7 @@ glob.mtop4.sum <- all.gain.loss.mtop4 %>%
   filter(suitability =="Gain") %>%
   group_by(rcp, time) %>%
   mutate(world.gain = sum(area), world.area = total.area.z$area,
-         gain.perc = area/world.gain *100, area.perc = forestry.area$area/world.area *100,
+         gain.perc = area/world.gain *100, area.perc = forestry.area.mtop4$area/world.area *100,
          rel.gain = gain.perc/area.perc) %>%
   filter(land.cover == "forestry", time == "2070-2099")
 
@@ -224,15 +237,15 @@ topprod <- test2 %>% mutate(order = case_when(country == "United States" ~ 1,
 
 top4.ordered.plot <- ggplot(topprod, aes(order2, rel.gain, colour = rcp)) +
   annotate("rect", xmin = -0.5, xmax = 0.5, ymin = -Inf, ymax = Inf, fill = "grey75", alpha= .5) +
-  geom_point(aes(group = rcp), position = position_dodge(width = .7), size = 3) +
+  geom_point(aes(group = rcp), position = position_dodge(width = .7), size = 5) +
   geom_point(data = glob.sum, aes(x = 0, y = rel.gain, fill = rcp),
-             position = position_dodge(width = .7), size = 5, shape = 21, colour = "black") +
-  geom_point(data = glob.mtop4.sum, aes(x = 5, y = rel.gain, fill = rcp),
-             position = position_dodge(width = .7), size = 3) +
+             position = position_dodge(width = .7), size = 7, shape = 21, colour = "black") +
+  #geom_point(data = glob.mtop4.sum, aes(x = 5, y = rel.gain, fill = rcp),
+   #          position = position_dodge(width = .7), size = 3) +
   geom_hline(yintercept = 1, linetype = "dashed") +
-  coord_cartesian(xlim = c(-0.5, 5.5), ylim = c(0, 7), expand = FALSE) +
-  scale_x_continuous(breaks = c(0:5), 
-                     labels = c("Global", "Russia", "United States",  "Canada", "China", "Rest of \n the world")) +
+  coord_cartesian(xlim = c(-0.5, 4.5), ylim = c(0, 7.3), expand = FALSE) +
+  scale_x_continuous(breaks = c(0:4), 
+                     labels = c("Global", "Russia", "United States",  "Canada", "China")) +
   scale_color_manual(values = c("#21918c", "#440154"), "RCP", 
                      labels = c("RCP2.6", "RCP8.5")) +
   scale_fill_manual(values = c("#21918c", "#440154"), "RCP", 

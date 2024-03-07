@@ -50,6 +50,7 @@ lyr.dat <- read.csv("Data/SuitableArea/SuitableArea.Summary.csv")
 lyr.dat <- lyr.dat %>%
   mutate(time = ordered(time, levels = c("Current", "2010-2039", "2040-2069","2070-2099")),
          suitability = ordered(suitability, levels = c("Unsuitable", "Marginal", "Moderately", "Highly")))
+
 #### Global gain loss ####
 layers <- list.files("Data/CurtisLayers/good.land", full.names = TRUE)[1:12]
 all.gain.loss.dat <- data.frame()
@@ -79,7 +80,7 @@ for (j in 1:length(layers)) {
   
   all.gain.loss.dat <- rbind(all.gain.loss.dat, gain.loss.i.add)       
 }
-write.csv(all.gain.loss.dat, "Data/CountryArea/global.gain.loss.raw.csv")
+#write.csv(all.gain.loss.dat, "Data/CountryArea/global.gain.loss.raw.csv")
 
 #### Global gain loss (minus top 4 timber producers) ####
 layers <- list.files("Data/CurtisLayers/good.land", full.names = TRUE)[1:12]
@@ -120,7 +121,7 @@ for (j in 1:length(layers)) {
   all.gain.loss.dat.mtop4 <- rbind(all.gain.loss.dat.mtop4, gain.loss.i.add.mtop4)       
 }
 
-write.csv(all.gain.loss.dat.mtop4, "Data/CountryArea/global.gain.loss.raw.minus.top4.csv")
+#write.csv(all.gain.loss.dat.mtop4, "Data/CountryArea/global.gain.loss.raw.minus.top4.csv")
 
 #### Travel time summary ####
 tt.layers <- list.files("Data/TravelTime", full.names = TRUE)[c(3,4,7,8)]
