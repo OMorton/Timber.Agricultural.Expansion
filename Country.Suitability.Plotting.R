@@ -2,6 +2,7 @@ library(tidyterra)
 library(tidyverse)
 library(ggpubr)
 library(terra)
+library(ggpubr)
 options(scipen = 999)
 
 source("Functions.r")
@@ -29,7 +30,7 @@ c.lyr.dat <- c.lyr.dat %>%
   mutate(time = ordered(time, levels = c("Current", "2010-2039", "2040-2069","2070-2099"))) %>%
   filter(land.cover == "Forestry")
 
-#### Horizontal top 4 plots net change free scales ####
+#### Horizontal top 4 plots net change free scales FIGURE 3 ####
 Rus.plt <- ggplot(filter(top.countries.5.top.crop.df, country == "Russia"), 
                   aes(net.area.gain.mha, crop, group = scenario, fill = scenario)) +
   geom_rect(xmin = -Inf, xmax = Inf, ymin = 0.5, ymax = 1.5, colour = NA, fill = "grey75", alpha = .01) +
@@ -43,9 +44,13 @@ Rus.plt <- ggplot(filter(top.countries.5.top.crop.df, country == "Russia"),
   xlab("Change in productive area (M ha)") +
   ylab("Crop") +
   scale_fill_manual(values = c("#21918c", "#440154"), "RCP") +
+  #scale_fill_manual(values = c("grey50", "#67001f"), "RCP") +
+  #scale_fill_manual(values = c("#053061", "#67001f"), "RCP") +
+  #scale_fill_manual(values = c("#084594", "#99000d"), "RCP") +
+  #scale_fill_manual(values = c("#2171b5", "#cb181d"), "RCP") +
   coord_cartesian(xlim = c(0, 45)) +
   annotate("text", label = "Russia", y = 5.3, x = 45*0.9, fontface = "bold", size = 4.5) +
-  theme_bw(base_size = 12) +
+  theme_bw(base_size = 10) +
   theme(legend.title = element_text(face = "bold"),
         strip.background = element_blank(), strip.text = element_text(face ="bold"),
         legend.position = "bottom")
@@ -63,9 +68,13 @@ USA.plt <- ggplot(filter(top.countries.5.top.crop.df, country == "United States"
   xlab("Change in productive area (M ha)") +
   ylab("Crop") +
   scale_fill_manual(values = c("#21918c", "#440154"), "RCP") +
+  #scale_fill_manual(values = c("grey50", "#67001f"), "RCP") +
+  #scale_fill_manual(values = c("#053061", "#67001f"), "RCP") +
+  #scale_fill_manual(values = c("#084594", "#99000d"), "RCP") +
+  #scale_fill_manual(values = c("#2171b5", "#cb181d"), "RCP") +
   coord_cartesian(xlim = c(-0.2, 3)) +
   annotate("text", label = "USA", y = 5.3, x = 3*0.9, fontface = "bold", size = 4.5) +
-  theme_bw(base_size = 12) +
+  theme_bw(base_size = 10) +
   theme(legend.title = element_text(face = "bold"),
         strip.background = element_blank(), strip.text = element_text(face ="bold"),
         legend.position = "bottom")
@@ -83,9 +92,13 @@ Can.plt <- ggplot(filter(top.countries.5.top.crop.df, country == "Canada"),
   xlab("Change in productive area (M ha)") +
   ylab("Crop") +
   scale_fill_manual(values = c("#21918c", "#440154"), "RCP") +
+  #scale_fill_manual(values = c("grey50", "#67001f"), "RCP") +
+  #scale_fill_manual(values = c("#053061", "#67001f"), "RCP") +
+  #scale_fill_manual(values = c("#084594", "#99000d"), "RCP") +
+  #scale_fill_manual(values = c("#2171b5", "#cb181d"), "RCP") +
   coord_cartesian(xlim = c(0, 8)) +
   annotate("text", label = "Canada", y = 5.3, x = 8*0.9, fontface = "bold", size = 4.5) +
-  theme_bw(base_size = 12) +
+  theme_bw(base_size = 10) +
   theme(legend.title = element_text(face = "bold"),
         strip.background = element_blank(), strip.text = element_text(face ="bold"),
         legend.position = "bottom")
@@ -103,9 +116,13 @@ Chi.plt <- ggplot(filter(top.countries.5.top.crop.df, country == "China"),
   xlab("Change in productive area (M ha)") +
   ylab("Crop") +
   scale_fill_manual(values = c("#21918c", "#440154"), "RCP") +
+  #scale_fill_manual(values = c("grey50", "#67001f"), "RCP") +
+  #scale_fill_manual(values = c("#053061", "#67001f"), "RCP") +
+  #scale_fill_manual(values = c("#084594", "#99000d"), "RCP") +
+  #scale_fill_manual(values = c("#2171b5", "#cb181d"), "RCP") +
   coord_cartesian(xlim = c(0, 4.5)) +
   annotate("text", label = "China", y = 5.3, x = 4.5*0.9, fontface = "bold", size = 4.5) +
-  theme_bw(base_size = 12) +
+  theme_bw(base_size = 10) +
   theme(legend.title = element_text(face = "bold"),
         strip.background = element_blank(), strip.text = element_text(face ="bold"),
         legend.position = "bottom")
@@ -126,9 +143,13 @@ top4.plt <- ggplot(top.4.crop.df,
   xlab("Change in productive area (M ha)") +
   ylab("Crop") +
   scale_fill_manual(values = c("#21918c", "#440154"), "RCP") +
+  #scale_fill_manual(values = c("grey50", "#67001f"), "RCP") +
+  #scale_fill_manual(values = c("#053061", "#67001f"), "RCP") +
+  #scale_fill_manual(values = c("#084594", "#99000d"), "RCP") +
+  #scale_fill_manual(values = c("#2171b5", "#cb181d"), "RCP") +
   coord_cartesian(xlim = c(0, 50)) +
   annotate("text", label = "Top 4", y = 5.3, x = 50*0.97, fontface = "bold", size = 4.5) +
-  theme_bw(base_size = 12) +
+  theme_bw(base_size = 10) +
   theme(legend.title = element_text(face = "bold"),
         strip.background = element_blank(), strip.text = element_text(face ="bold"),
         legend.position = "bottom")
@@ -146,9 +167,13 @@ All.plt <- ggplot(five.crops.global.productive.land.change.df,
   xlab("Change in productive area (M ha)") +
   ylab("Crop") +
   scale_fill_manual(values = c("#21918c", "#440154"), "RCP") +
+  #scale_fill_manual(values = c("grey50", "#67001f"), "RCP") +
+  #scale_fill_manual(values = c("#053061", "#67001f"), "RCP") +
+  #scale_fill_manual(values = c("#084594", "#99000d"), "RCP") +
+  #scale_fill_manual(values = c("#2171b5", "#cb181d"), "RCP") +
   coord_cartesian(xlim = c(0, 50)) +
   annotate("text", label = "Global", y = 5.3, x = 50*0.97, fontface = "bold", size = 4.5) +
-  theme_bw(base_size = 12) +
+  theme_bw(base_size = 10) +
   theme(legend.title = element_text(face = "bold"),
         strip.background = element_blank(), strip.text = element_text(face ="bold"),
         legend.position = "bottom")
@@ -159,9 +184,52 @@ top4.arr.plt.freescales <- ggarrange(All.plt,
                                                labels = c("b", "c", "d", "e", "f"), common.legend = TRUE, legend = "bottom"),
                                      nrow = 2, labels = c("a", ""), legend = "none", heights = c(1,2))
 
-ggsave(path = "Outputs/Figures/CountryCrop", top4.arr.plt.freescales, filename = "top4.plusALL.freescales.png",  bg = "white",
-       device = "png", width = 20, height = 16, units = "cm")
-#### Country gain loss ####
+ggsave(path = "Outputs/Figures/FINAL", top4.arr.plt.freescales, 
+       filename = "top4.plusALL.freescales.FINAL.png",  bg = "white",
+       device = "png", width = 17, height = 14, units = "cm", dpi = 1200)
+ggsave(path = "Outputs/Figures/FINAL", top4.arr.plt.freescales, 
+       filename = "top4.plusALL.freescales.FINAL.pdf",  bg = "white",
+       device = "pdf", width = 17, height = 14, units = "cm", dpi = 1200)
+
+
+
+##red blue
+ggsave(path = "Outputs/Figures/CountryCrop", top4.arr.plt.freescales, 
+       filename = "top4.plusALL.freescales.redblue.png",  bg = "white",
+       device = "png", width = 20, height = 17, units = "cm")
+
+ggsave(path = "Outputs/Figures/CountryCrop", top4.arr.plt.freescales, 
+       filename = "top4.plusALL.freescales.redblue.pdf",  bg = "white",
+       device = "pdf", width = 20, height = 17, units = "cm")
+
+##red grey
+ggsave(path = "Outputs/Figures/CountryCrop", top4.arr.plt.freescales, 
+       filename = "top4.plusALL.freescales.redgrey.png",  bg = "white",
+       device = "png", width = 20, height = 17, units = "cm")
+
+ggsave(path = "Outputs/Figures/CountryCrop", top4.arr.plt.freescales, 
+       filename = "top4.plusALL.freescales.redgrey.pdf",  bg = "white",
+       device = "pdf", width = 20, height = 17, units = "cm")
+
+##red blue light
+ggsave(path = "Outputs/Figures/CountryCrop", top4.arr.plt.freescales, 
+       filename = "top4.plusALL.freescales.redbluelight.png",  bg = "white",
+       device = "png", width = 20, height = 17, units = "cm")
+
+ggsave(path = "Outputs/Figures/CountryCrop", top4.arr.plt.freescales, 
+       filename = "top4.plusALL.freescales.redbluelight.pdf",  bg = "white",
+       device = "pdf", width = 20, height = 17, units = "cm")
+
+##red blue dark
+ggsave(path = "Outputs/Figures/CountryCrop", top4.arr.plt.freescales, 
+       filename = "top4.plusALL.freescales.redbluedark.png",  bg = "white",
+       device = "png", width = 20, height = 17, units = "cm")
+
+ggsave(path = "Outputs/Figures/CountryCrop", top4.arr.plt.freescales, 
+       filename = "top4.plusALL.freescales.redbluedark.pdf",  bg = "white",
+       device = "pdf", width = 20, height = 17, units = "cm")
+
+#### Country gain loss FIGURE 4 ####
 forestry.area <- rast("Data/CurtisLayers/curtis.forestry.2010.2039.rcp2p6.ag.suitability.classified 3.tif") %>%
   expanse(unit = "ha") ## 1,197,895,027
 
@@ -246,12 +314,18 @@ top4.ordered.plot <- ggplot(topprod, aes(order2, rel.gain, colour = rcp)) +
   coord_cartesian(xlim = c(-0.5, 4.5), ylim = c(0, 7.3), expand = FALSE) +
   scale_x_continuous(breaks = c(0:4), 
                      labels = c("Global", "Russia", "United States",  "Canada", "China")) +
-  scale_color_manual(values = c("#21918c", "#440154"), "RCP", 
-                     labels = c("RCP2.6", "RCP8.5")) +
-  scale_fill_manual(values = c("#21918c", "#440154"), "RCP", 
-                     labels = c("RCP2.6", "RCP8.5")) +
+  scale_color_manual(values = c("#21918c", "#440154"), "RCP", labels = c("RCP2.6", "RCP8.5")) +
+  scale_fill_manual(values = c("#21918c", "#440154"), "RCP", labels = c("RCP2.6", "RCP8.5")) +
+  #scale_fill_manual(values = c("grey50", "#67001f"), "RCP", labels = c("RCP2.6", "RCP8.5")) +
+  #scale_colour_manual(values = c("grey50", "#67001f"), "RCP", labels = c("RCP2.6", "RCP8.5")) +
+  #scale_fill_manual(values = c("#053061", "#67001f"), "RCP", labels = c("RCP2.6", "RCP8.5")) +
+  #scale_colour_manual(values = c("#053061", "#67001f"), "RCP", labels = c("RCP2.6", "RCP8.5")) +
+  #scale_fill_manual(values = c("#084594", "#99000d"), "RCP", labels = c("RCP2.6", "RCP8.5")) +
+  #scale_colour_manual(values = c("#084594", "#99000d"), "RCP", labels = c("RCP2.6", "RCP8.5")) +
+  #scale_fill_manual(values = c("#2171b5", "#cb181d"), "RCP", labels = c("RCP2.6", "RCP8.5")) +
+  #scale_colour_manual(values = c("#2171b5", "#cb181d"), "RCP", labels = c("RCP2.6", "RCP8.5")) +
   ylab("Productive frontier in  \n forestry : Land surface area ratio") +
-  theme_bw(base_size = 11.5) +
+  theme_bw(base_size = 10) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, face = c("bold", rep("plain", 10)),
                                    colour = "black"),
         legend.position = "bottom", axis.title.x = element_blank(),
@@ -271,12 +345,15 @@ tt.plt <- ggplot(tt.dat, aes(mean/60, land.cover, colour = rcp, group = rcp)) +
                  height = 0, linewidth = 2) +
   scale_y_discrete(limits = c("non.forestry", "forestry"), 
                    labels = c("Non forestry", "Forestry")) +
-  scale_color_manual(values = c("#21918c", "#440154"), "RCP", 
-                     labels = c("RCP2.6", "RCP8.5")) +
+  scale_color_manual(values = c("#21918c", "#440154"), "RCP", labels = c("RCP2.6", "RCP8.5")) +
+  #scale_colour_manual(values = c("grey50", "#67001f"), "RCP", labels = c("RCP2.6", "RCP8.5")) +
+  #scale_colour_manual(values = c("#053061", "#67001f"), "RCP", labels = c("RCP2.6", "RCP8.5")) +
+  #scale_colour_manual(values = c("#084594", "#99000d"), "RCP", labels = c("RCP2.6", "RCP8.5")) +
+  #scale_colour_manual(values = c("#2171b5", "#cb181d"), "RCP", labels = c("RCP2.6", "RCP8.5")) +
   xlab("Travel time to population centre (hours)") +
   ylab("Productive frontier") +
   #scale_x_log10() +
-  theme_bw(base_size = 11.5) +
+  theme_bw(base_size = 10) +
   theme(legend.position = "bottom", legend.title = element_text(face = "bold"))
   
 
@@ -288,12 +365,15 @@ d.plt <- ggplot(d.dat, aes(mean/1000, land.cover, colour = rcp, group = rcp)) +
                  height = 0, linewidth = 2) +
   scale_y_discrete(limits = c("non.forestry", "forestry"), 
                    labels = c("Non forestry", "Forestry")) +
-  scale_color_manual(values = c("#21918c", "#440154"), "RCP", 
-                     labels = c("RCP2.6", "RCP8.5")) +
+  scale_color_manual(values = c("#21918c", "#440154"), "RCP", labels = c("RCP2.6", "RCP8.5")) +
+  #scale_colour_manual(values = c("grey50", "#67001f"), "RCP", labels = c("RCP2.6", "RCP8.5")) +
+  #scale_colour_manual(values = c("#053061", "#67001f"), "RCP", labels = c("RCP2.6", "RCP8.5")) +
+  #scale_colour_manual(values = c("#084594", "#99000d"), "RCP", labels = c("RCP2.6", "RCP8.5")) +
+  #scale_colour_manual(values = c("#2171b5", "#cb181d"), "RCP", labels = c("RCP2.6", "RCP8.5")) +
   xlab("Distance to current agriculture (km)") +
   ylab("Productive frontier") +
   #scale_x_log10() +
-  theme_bw(base_size = 11.5) +
+  theme_bw(base_size = 10) +
   theme(legend.position = "bottom", legend.title = element_text(face = "bold"))
 
 tt.d.plt <- ggarrange(top4.ordered.plot, 
@@ -302,8 +382,56 @@ tt.d.plt <- ggarrange(top4.ordered.plot,
                       legend = "none", labels = c("a", ""), ncol = 1, nrow = 2, 
                       heights = c(1, 1))
 
+## final
+ggsave(path = "Outputs/Figures/FINAL", tt.d.plt, 
+       filename = "country.gainloss.ratio.tt.d.FINAL.png",  bg = "white",
+       device = "png", width = 18, height = 14, units = "cm", dpi = 1200)
+ggsave(path = "Outputs/Figures/FINAL", tt.d.plt, 
+       filename = "country.gainloss.ratio.tt.d.FINAL.pdf",  bg = "white",
+       device = "pdf", width = 17, height = 14, units = "cm", dpi = 1200)
+
 ggsave(path = "Outputs/Figures/Countries", tt.d.plt, 
        filename = "country.gainloss.ratio.tt.d.png",  bg = "white",
+       device = "png", width = 20, height = 16, units = "cm")
+
+ggsave(path = "Outputs/Figures/Countries", tt.d.plt, 
+       filename = "country.gainloss.ratio.tt.d.pdf",  bg = "white",
+       device = "pdf", width = 20, height = 16, units = "cm")
+
+## redblue
+ggsave(path = "Outputs/Figures/Countries", tt.d.plt, 
+       filename = "country.gainloss.ratio.tt.d.redblue.pdf",  bg = "white",
+       device = "pdf", width = 20, height = 16, units = "cm")
+
+ggsave(path = "Outputs/Figures/Countries", tt.d.plt, 
+       filename = "country.gainloss.ratio.tt.d.redblue.png",  bg = "white",
+       device = "png", width = 20, height = 16, units = "cm")
+
+## redgrey
+ggsave(path = "Outputs/Figures/Countries", tt.d.plt, 
+       filename = "country.gainloss.ratio.tt.d.redgrey.pdf",  bg = "white",
+       device = "pdf", width = 20, height = 16, units = "cm")
+
+ggsave(path = "Outputs/Figures/Countries", tt.d.plt, 
+       filename = "country.gainloss.ratio.tt.d.redgrey.png",  bg = "white",
+       device = "png", width = 20, height = 16, units = "cm")
+
+## redblue light
+ggsave(path = "Outputs/Figures/Countries", tt.d.plt, 
+       filename = "country.gainloss.ratio.tt.d.redbluelight.pdf",  bg = "white",
+       device = "pdf", width = 20, height = 16, units = "cm")
+
+ggsave(path = "Outputs/Figures/Countries", tt.d.plt, 
+       filename = "country.gainloss.ratio.tt.d.redbluelight.png",  bg = "white",
+       device = "png", width = 20, height = 16, units = "cm")
+
+## redblue dark
+ggsave(path = "Outputs/Figures/Countries", tt.d.plt, 
+       filename = "country.gainloss.ratio.tt.d.redbluedark.pdf",  bg = "white",
+       device = "pdf", width = 20, height = 16, units = "cm")
+
+ggsave(path = "Outputs/Figures/Countries", tt.d.plt, 
+       filename = "country.gainloss.ratio.tt.d.redbluedark.png",  bg = "white",
        device = "png", width = 20, height = 16, units = "cm")
 
 

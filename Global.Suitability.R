@@ -126,6 +126,7 @@ for (j in 1:length(layers)) {
 #### Travel time summary ####
 tt.layers <- list.files("Data/TravelTime", full.names = TRUE)[c(3,4,7,8)]
 tt.dat <- data.frame()
+
 for (i in 1:length(tt.layers)) {
   lyr <- tt.layers[i]
   cat(lyr, '\n', i, "out of", length(tt.layers), '\n')
@@ -138,6 +139,9 @@ for (i in 1:length(tt.layers)) {
     land.cover <- "forestry"}
   tt.ex <- rast(lyr) %>% expanse(byValue = TRUE, unit = "ha") %>%
     mutate(rcp = rcp, time = time, land.cover = land.cover)
+  
+  c.num <- rast(lyr) %>% cells() %>% length()
+  
   tt.mean <- fastmean(tt.ex)
   tt.sd <- fastSD(tt.ex)
   
@@ -154,7 +158,7 @@ for (i in 1:length(tt.layers)) {
   q25.lyr <- tt.ex$value[tt.ex$cumfreq >= q25][1]
   q75.lyr <- tt.ex$value[tt.ex$cumfreq >= q75][1]
   
-  tt.add <- data.frame(rcp = rcp, time = time, land.cover = land.cover,
+  tt.add <- data.frame(rcp = rcp, time = time, land.cover = land.cover, ncells = c.num,
                        mean = tt.mean, sd = tt.sd,
                        q5 = q5.lyr, q50 = q50.lyr, q95 = q95.lyr,
                        q25 = q25.lyr, q75 = q75.lyr)
@@ -182,6 +186,9 @@ for (i in 1:length(d.layers)) {
     land.cover <- "forestry"}
   d.ex <- rast(lyr) %>% expanse(byValue = TRUE, unit = "ha") %>%
     mutate(rcp = rcp, time = time, land.cover = land.cover)
+  
+  c.num <- rast(lyr) %>% cells() %>% length()
+  
   d.mean <- fastmean(d.ex)
   d.sd <- fastSD(d.ex)
   
@@ -198,7 +205,7 @@ for (i in 1:length(d.layers)) {
   q25.lyr <- d.ex$value[d.ex$cumfreq >= q25][1]
   q75.lyr <- d.ex$value[d.ex$cumfreq >= q75][1]
   
-  d.add <- data.frame(rcp = rcp, time = time, land.cover = land.cover,
+  d.add <- data.frame(rcp = rcp, time = time, land.cover = land.cover, ncells = c.num,
                       mean = d.mean, sd = d.sd, 
                       q5 = q5.lyr, q50 = q50.lyr, q95 = q95.lyr,
                       q25 = q25.lyr, q75 = q75.lyr)
@@ -208,7 +215,7 @@ for (i in 1:length(d.layers)) {
   write.csv(d.ex, paste0("Data/Distance/", land.cover,
                          ".", time, ".", rcp, "raw.csv"))
 }
-write.csv(d.dat, "Data/Distance/distance.sum.csv")
+#write.csv(d.dat, "Data/Distance/distance.sum.csv")
 
 #### Plot forestry suitability area ####
 rcp26 <- lyr.dat %>% filter(RCP %in% c("rcp2.6",NA), land.cover == "Forestry")
